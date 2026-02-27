@@ -132,26 +132,25 @@ const loadSeedData = async (): Promise<SeedData> => {
 const seed = async () => {
   const data = await loadSeedData();
 
-  await db.transaction(async (tx) => {
-    // Delete data in reverse dependency order
-    await tx.delete(studentClassEnrollments);
-    await tx.delete(studentParents);
-    await tx.delete(students);
-    await tx.delete(parents);
-    await tx.delete(staffSubjects);
-    await tx.delete(classSubjects);
-    await tx.delete(classes);
-    await tx.delete(staff);
-    await tx.delete(subjects);
-    await tx.delete(terms);
-    await tx.delete(academicYears);
-    await tx.delete(session);
-    await tx.delete(account);
-    await tx.delete(user);
+  // Delete data in reverse dependency order
+  await db.delete(studentClassEnrollments);
+  await db.delete(studentParents);
+  await db.delete(students);
+  await db.delete(parents);
+  await db.delete(staffSubjects);
+  await db.delete(classSubjects);
+  await db.delete(classes);
+  await db.delete(staff);
+  await db.delete(subjects);
+  await db.delete(terms);
+  await db.delete(academicYears);
+  await db.delete(session);
+  await db.delete(account);
+  await db.delete(user);
 
     // Insert User data
     if (data.users.length) {
-      await tx
+      await db
         .insert(user)
         .values(
           data.users.map((seedUser) => ({
@@ -166,7 +165,7 @@ const seed = async () => {
         )
         .onConflictDoNothing({ target: user.id });
 
-      await tx
+      await db
         .insert(account)
         .values(
           data.users.map((seedUser) => ({
@@ -184,7 +183,7 @@ const seed = async () => {
 
     // Insert Academic Years
     if (data.academicYears.length) {
-      await tx
+      await db
         .insert(academicYears)
         .values(
           data.academicYears.map((year) => ({
@@ -198,7 +197,7 @@ const seed = async () => {
 
     // Insert Terms
     if (data.terms.length) {
-      await tx
+      await db
         .insert(terms)
         .values(
           data.terms.map((term) => ({
@@ -214,7 +213,7 @@ const seed = async () => {
 
     // Insert Staff
     if (data.staff.length) {
-      await tx
+      await db
         .insert(staff)
         .values(
           data.staff.map((s) => ({
@@ -234,7 +233,7 @@ const seed = async () => {
 
     // Insert Subjects
     if (data.subjects.length) {
-      await tx
+      await db
         .insert(subjects)
         .values(
           data.subjects.map((subj) => ({
@@ -249,7 +248,7 @@ const seed = async () => {
 
     // Insert Classes
     if (data.classes.length) {
-      await tx
+      await db
         .insert(classes)
         .values(
           data.classes.map((cls) => ({
@@ -262,19 +261,13 @@ const seed = async () => {
     }
 
     // Get IDs for building relationships
-    const subjectRows = await tx
-      .select({ id: subjects.id })
-      .from(subjects);
+    const subjectRows = await db.select({ id: subjects.id }).from(subjects);
     const subjectIds = subjectRows.map((row) => row.id);
 
-    const classRows = await tx
-      .select({ id: classes.id })
-      .from(classes);
+    const classRows = await db.select({ id: classes.id }).from(classes);
     const classIds = classRows.map((row) => row.id);
 
-    const staffRows = await tx
-      .select({ id: staff.id })
-      .from(staff);
+    const staffRows = await db.select({ id: staff.id }).from(staff);
     const staffIds = staffRows.map((row) => row.id);
 
     // Insert Class Subjects
@@ -297,7 +290,7 @@ const seed = async () => {
       });
 
       if (classSubjectsData.length) {
-        await tx
+        await db
           .insert(classSubjects)
           .values(classSubjectsData)
           .onConflictDoNothing();
@@ -324,7 +317,7 @@ const seed = async () => {
       });
 
       if (staffSubjectsData.length) {
-        await tx
+        await db
           .insert(staffSubjects)
           .values(staffSubjectsData)
           .onConflictDoNothing();
@@ -333,7 +326,7 @@ const seed = async () => {
 
     // Insert Students
     if (data.students.length) {
-      await tx
+      await db
         .insert(students)
         .values(
           data.students.map((s) => ({
@@ -350,7 +343,7 @@ const seed = async () => {
 
     // Insert Parents
     if (data.parents.length) {
-      await tx
+      await db
         .insert(parents)
         .values(
           data.parents.map((p) => ({
@@ -366,19 +359,15 @@ const seed = async () => {
     }
 
     // Get student and parent IDs
-    const studentRows = await tx
-      .select({ id: students.id })
-      .from(students);
+    const studentRows = await db.select({ id: students.id }).from(students);
     const studentIds = studentRows.map((row) => row.id);
 
-    const parentRows = await tx
-      .select({ id: parents.id })
-      .from(parents);
+    const parentRows = await db.select({ id: parents.id }).from(parents);
     const parentIds = parentRows.map((row) => row.id);
 
     // Insert Student Parents
     if (data.studentParents.length && studentIds.length && parentIds.length) {
-      await tx
+      await db
         .insert(studentParents)
         .values(
           data.studentParents
@@ -388,8 +377,7 @@ const seed = async () => {
               relationship: sp.relationship,
             }))
             .filter(
-              (sp) =>
-                sp.studentId !== undefined && sp.parentId !== undefined,
+              (sp) => sp.studentId !== undefined && sp.parentId !== undefined,
             ),
         )
         .onConflictDoNothing();
@@ -401,12 +389,12 @@ const seed = async () => {
       studentIds.length &&
       classIds.length
     ) {
-      const academicYearRows = await tx
+      const academicYearRows = await db
         .select({ id: academicYears.id })
         .from(academicYears);
       const academicYearIds = academicYearRows.map((row) => row.id);
 
-      await tx
+      await db
         .insert(studentClassEnrollments)
         .values(
           data.studentClassEnrollments
@@ -425,7 +413,7 @@ const seed = async () => {
         )
         .onConflictDoNothing();
     }
-  });
+  
 };
 
 seed()
