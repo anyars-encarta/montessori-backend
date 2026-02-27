@@ -1,0 +1,452 @@
+{
+  "users": [
+    {
+      "id": "admin_1",
+      "name": "Ava Collins",
+      "email": "ava.admin@montessori.edu",
+      "role": "admin",
+      "password": "Admin#1234",
+      "image": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "teacher_1",
+      "name": "Sarah Thompson",
+      "email": "sarah.thompson@montessori.edu",
+      "role": "teacher",
+      "password": "Teacher#1234",
+      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "teacher_2",
+      "name": "James Mitchell",
+      "email": "james.mitchell@montessori.edu",
+      "role": "teacher",
+      "password": "Teacher#5678",
+      "image": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "teacher_3",
+      "name": "Maria Garcia",
+      "email": "maria.garcia@montessori.edu",
+      "role": "teacher",
+      "password": "Teacher#9012",
+      "image": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "teacher_4",
+      "name": "David Chen",
+      "email": "david.chen@montessori.edu",
+      "role": "teacher",
+      "password": "Teacher#3456",
+      "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_1",
+      "name": "Arjun Singh",
+      "email": "arjun.singh@student.montessori.edu",
+      "role": "student",
+      "password": "Student#123",
+      "image": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_2",
+      "name": "Emily Chen",
+      "email": "emily.chen@student.montessori.edu",
+      "role": "student",
+      "password": "Student#234",
+      "image": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_3",
+      "name": "Zoe Parker",
+      "email": "zoe.parker@student.montessori.edu",
+      "role": "student",
+      "password": "Student#345",
+      "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_4",
+      "name": "Jacob Miller",
+      "email": "jacob.miller@student.montessori.edu",
+      "role": "student",
+      "password": "Student#456",
+      "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_5",
+      "name": "Sara James",
+      "email": "sara.james@student.montessori.edu",
+      "role": "student",
+      "password": "Student#567",
+      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_6",
+      "name": "Daniel Wright",
+      "email": "daniel.wright@student.montessori.edu",
+      "role": "student",
+      "password": "Student#678",
+      "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_7",
+      "name": "Nina Alvarez",
+      "email": "nina.alvarez@student.montessori.edu",
+      "role": "student",
+      "password": "Student#789",
+      "image": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "id": "student_8",
+      "name": "Omar Farouk",
+      "email": "omar.farouk@student.montessori.edu",
+      "role": "student",
+      "password": "Student#890",
+      "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
+      "imageCldPubId": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
+    }
+  ],
+  "academicYears": [
+    {
+      "year": 2024,
+      "startDate": "2024-01-15",
+      "endDate": "2024-12-15"
+    },
+    {
+      "year": 2025,
+      "startDate": "2025-01-15",
+      "endDate": "2025-12-15"
+    },
+    {
+      "year": 2026,
+      "startDate": "2026-01-15",
+      "endDate": "2026-12-15"
+    }
+  ],
+  "terms": [
+    {
+      "name": "Term 1",
+      "sequenceNumber": 1,
+      "academicYearId": 1,
+      "startDate": "2024-01-15",
+      "endDate": "2024-04-15"
+    },
+    {
+      "name": "Term 2",
+      "sequenceNumber": 2,
+      "academicYearId": 1,
+      "startDate": "2024-05-01",
+      "endDate": "2024-08-15"
+    },
+    {
+      "name": "Term 3",
+      "sequenceNumber": 3,
+      "academicYearId": 1,
+      "startDate": "2024-09-01",
+      "endDate": "2024-12-15"
+    }
+  ],
+  "staff": [
+    {
+      "firstName": "Sarah",
+      "lastName": "Thompson",
+      "email": "sarah.thompson@montessori.edu",
+      "phone": "+1-555-0101",
+      "dateOfBirth": "1985-03-15",
+      "staffType": "teacher",
+      "hireDate": "2020-08-01",
+      "isActive": true,
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "James",
+      "lastName": "Mitchell",
+      "email": "james.mitchell@montessori.edu",
+      "phone": "+1-555-0102",
+      "dateOfBirth": "1982-07-22",
+      "staffType": "teacher",
+      "hireDate": "2019-08-15",
+      "isActive": true,
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Maria",
+      "lastName": "Garcia",
+      "email": "maria.garcia@montessori.edu",
+      "phone": "+1-555-0103",
+      "dateOfBirth": "1988-11-10",
+      "staffType": "teacher",
+      "hireDate": "2021-01-10",
+      "isActive": true,
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "David",
+      "lastName": "Chen",
+      "email": "david.chen@montessori.edu",
+      "phone": "+1-555-0104",
+      "dateOfBirth": "1986-05-28",
+      "staffType": "teacher",
+      "hireDate": "2020-09-01",
+      "isActive": true,
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Emma",
+      "lastName": "Williams",
+      "email": "emma.williams@montessori.edu",
+      "phone": "+1-555-0105",
+      "dateOfBirth": "1990-02-14",
+      "staffType": "non_teaching",
+      "hireDate": "2022-06-01",
+      "isActive": true,
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80"
+    }
+  ],
+  "subjects": [
+    {
+      "name": "Mathematics",
+      "code": "MATH",
+      "description": "Numeracy, basic arithmetic and problem solving",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1518235506717-e1ed3306a326?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "name": "Language Arts",
+      "code": "ENG",
+      "description": "Reading, writing and communication skills",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1507842331343-ed2e67a9bb3b?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "name": "Science",
+      "code": "SCI",
+      "description": "Natural sciences and experimentation",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1530357915903-d33b887946d4?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "name": "History & Geography",
+      "code": "HIST",
+      "description": "Cultural studies and world awareness",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "name": "Physical Education",
+      "code": "PE",
+      "description": "Movement, sports and physical development",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "name": "Art & Craft",
+      "code": "ART",
+      "description": "Creative expression through visual arts",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1569163139394-de4798aa62b1?auto=format&fit=crop&w=400&q=80"
+    }
+  ],
+  "classes": [
+    {
+      "name": "Primary 1",
+      "level": "P1",
+      "supervisorId": 1,
+      "subjectIds": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "name": "Primary 2",
+      "level": "P2",
+      "supervisorId": 2,
+      "subjectIds": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "name": "Primary 3",
+      "level": "P3",
+      "supervisorId": 3,
+      "subjectIds": [1, 2, 3, 4, 5, 6]
+    },
+    {
+      "name": "Primary 4",
+      "level": "P4",
+      "supervisorId": 4,
+      "subjectIds": [1, 2, 3, 4, 5, 6]
+    }
+  ],
+  "staffSubjects": [
+    {
+      "staffId": 1,
+      "subjectIds": [1, 2]
+    },
+    {
+      "staffId": 2,
+      "subjectIds": [3, 4]
+    },
+    {
+      "staffId": 3,
+      "subjectIds": [5, 6]
+    },
+    {
+      "staffId": 4,
+      "subjectIds": [1, 2, 3]
+    }
+  ],
+  "students": [
+    {
+      "firstName": "Arjun",
+      "lastName": "Singh",
+      "dateOfBirth": "2016-05-10",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG001",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Emily",
+      "lastName": "Chen",
+      "dateOfBirth": "2016-08-22",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG002",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Zoe",
+      "lastName": "Parker",
+      "dateOfBirth": "2017-02-14",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG003",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Jacob",
+      "lastName": "Miller",
+      "dateOfBirth": "2016-11-03",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG004",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Sara",
+      "lastName": "James",
+      "dateOfBirth": "2017-06-18",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG005",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Daniel",
+      "lastName": "Wright",
+      "dateOfBirth": "2016-09-27",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG006",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Nina",
+      "lastName": "Alvarez",
+      "dateOfBirth": "2017-03-30",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG007",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80"
+    },
+    {
+      "firstName": "Omar",
+      "lastName": "Farouk",
+      "dateOfBirth": "2016-07-12",
+      "admissionDate": "2024-01-15",
+      "registrationNumber": "REG008",
+      "cloudinaryImageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
+    }
+  ],
+  "parents": [
+    {
+      "firstName": "Rajesh",
+      "lastName": "Singh",
+      "email": "rajesh.singh@email.com",
+      "phone": "+1-555-1001",
+      "occupation": "Software Engineer",
+      "address": "123 Oak Street, Springfield"
+    },
+    {
+      "firstName": "Linda",
+      "lastName": "Chen",
+      "email": "linda.chen@email.com",
+      "phone": "+1-555-1002",
+      "occupation": "Doctor",
+      "address": "456 Maple Avenue, Springfield"
+    },
+    {
+      "firstName": "Michael",
+      "lastName": "Parker",
+      "email": "michael.parker@email.com",
+      "phone": "+1-555-1003",
+      "occupation": "Accountant",
+      "address": "789 Pine Road, Springfield"
+    },
+    {
+      "firstName": "Jennifer",
+      "lastName": "Miller",
+      "email": "jennifer.miller@email.com",
+      "phone": "+1-555-1004",
+      "occupation": "Teacher",
+      "address": "321 Elm Street, Springfield"
+    },
+    {
+      "firstName": "Robert",
+      "lastName": "James",
+      "email": "robert.james@email.com",
+      "phone": "+1-555-1005",
+      "occupation": "Manager",
+      "address": "654 Birch Lane, Springfield"
+    },
+    {
+      "firstName": "Patricia",
+      "lastName": "Wright",
+      "email": "patricia.wright@email.com",
+      "phone": "+1-555-1006",
+      "occupation": "Lawyer",
+      "address": "987 Cedar Court, Springfield"
+    },
+    {
+      "firstName": "Carlos",
+      "lastName": "Alvarez",
+      "email": "carlos.alvarez@email.com",
+      "phone": "+1-555-1007",
+      "occupation": "Engineer",
+      "address": "147 Spruce Drive, Springfield"
+    },
+    {
+      "firstName": "Amira",
+      "lastName": "Farouk",
+      "email": "amira.farouk@email.com",
+      "phone": "+1-555-1008",
+      "occupation": "Nurse",
+      "address": "258 Willow Way, Springfield"
+    }
+  ],
+  "studentParents": [
+    { "studentId": 1, "parentId": 1, "relationship": "father" },
+    { "studentId": 2, "parentId": 2, "relationship": "mother" },
+    { "studentId": 3, "parentId": 3, "relationship": "father" },
+    { "studentId": 4, "parentId": 4, "relationship": "mother" },
+    { "studentId": 5, "parentId": 5, "relationship": "father" },
+    { "studentId": 6, "parentId": 6, "relationship": "mother" },
+    { "studentId": 7, "parentId": 7, "relationship": "father" },
+    { "studentId": 8, "parentId": 8, "relationship": "mother" }
+  ],
+  "studentClassEnrollments": [
+    { "studentId": 1, "classId": 1, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 2, "classId": 1, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 3, "classId": 2, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 4, "classId": 2, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 5, "classId": 3, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 6, "classId": 3, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 7, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 8, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" }
+  ]
+}
