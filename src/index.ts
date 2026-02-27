@@ -69,10 +69,6 @@ app.use("/api/expense-categories", expenseCategoriesRoutes);
 app.use("/api/expenses", expensesRoutes);
 app.use("/api/student-attendances", studentAttendancesRoutes);
 app.use("/api/staff-attendances", staffAttendancesRoutes);
-app.use("/api/class-subjects", classSubjectsRoutes);
-app.use("/api/staff-subjects", staffSubjectsRoutes);
-app.use("/api/student-parents", studentParentsRoutes);
-app.use("/api/student-siblings", studentSiblingsRoutes);
 app.use("/api/cloudinary", cloudinaryRoutes);
 
 // Routes
