@@ -66,6 +66,7 @@ type SeedSubject = {
 type SeedClass = {
   name: string;
   level: string;
+  capacity: number;
   supervisorId: number;
   subjectIds: number[];
 };
@@ -254,6 +255,7 @@ const seed = async () => {
           data.classes.map((cls) => ({
             name: cls.name,
             level: cls.level,
+            capacity: cls.capacity,
             supervisorId: cls.supervisorId,
           })),
         )

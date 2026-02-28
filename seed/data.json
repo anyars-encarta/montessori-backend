@@ -257,24 +257,28 @@
     {
       "name": "Primary 1",
       "level": "P1",
+      "capacity": 35,
       "supervisorId": 1,
       "subjectIds": [1, 2, 3, 4, 5, 6]
     },
     {
       "name": "Primary 2",
       "level": "P2",
+      "capacity": 40,
       "supervisorId": 2,
       "subjectIds": [1, 2, 3, 4, 5, 6]
     },
     {
       "name": "Primary 3",
       "level": "P3",
+      "capacity": 30,
       "supervisorId": 3,
       "subjectIds": [1, 2, 3, 4, 5, 6]
     },
     {
       "name": "Primary 4",
       "level": "P4",
+      "capacity": 50,
       "supervisorId": 4,
       "subjectIds": [1, 2, 3, 4, 5, 6]
     }
