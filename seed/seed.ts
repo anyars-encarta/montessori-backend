@@ -8,12 +8,25 @@ import {
   academicYears,
   classSubjects,
   classes,
+  continuousAssessments,
+  expenseCategories,
+  expenses,
+  fees,
+  healthDetails,
+  otherSignificantData,
   parents,
+  payments,
+  positions,
+  previousSchools,
   session,
   staff,
+  staffAttendances,
   staffSubjects,
+  studentAttendances,
   studentClassEnrollments,
+  studentFees,
   studentParents,
+  studentSiblings,
   students,
   subjects,
   terms,
@@ -130,19 +143,58 @@ const loadSeedData = async (): Promise<SeedData> => {
   return JSON.parse(raw) as SeedData;
 };
 
+const classKey = (name: string, level: string) => `${name}::${level}`;
+
+const resolveAcademicYearId = (
+  reference: number,
+  startDate: string,
+  seedAcademicYears: SeedAcademicYear[],
+  academicYearIdByYear: Map<number, number>,
+) => {
+  const fromIndex = seedAcademicYears[reference - 1];
+  if (fromIndex) {
+    const mapped = academicYearIdByYear.get(fromIndex.year);
+    if (mapped) return mapped;
+  }
+
+  const directYearMatch = academicYearIdByYear.get(reference);
+  if (directYearMatch) return directYearMatch;
+
+  const startYear = Number(startDate.slice(0, 4));
+  const byDate = academicYearIdByYear.get(startYear);
+  if (byDate) return byDate;
+
+  throw new Error(
+    `Could not resolve academic year reference '${reference}' for start date '${startDate}'.`,
+  );
+};
+
 const seed = async () => {
   const data = await loadSeedData();
 
   // Delete data in reverse dependency order
+  await db.delete(payments);
+  await db.delete(studentFees);
+  await db.delete(fees);
+  await db.delete(positions);
+  await db.delete(continuousAssessments);
+  await db.delete(studentAttendances);
+  await db.delete(staffAttendances);
+  await db.delete(expenses);
+  await db.delete(expenseCategories);
+  await db.delete(previousSchools);
+  await db.delete(otherSignificantData);
+  await db.delete(healthDetails);
+  await db.delete(studentSiblings);
   await db.delete(studentClassEnrollments);
   await db.delete(studentParents);
-  await db.delete(students);
-  await db.delete(parents);
   await db.delete(staffSubjects);
   await db.delete(classSubjects);
   await db.delete(classes);
-  await db.delete(staff);
   await db.delete(subjects);
+  await db.delete(students);
+  await db.delete(parents);
+  await db.delete(staff);
   await db.delete(terms);
   await db.delete(academicYears);
   await db.delete(session);
@@ -196,6 +248,13 @@ const seed = async () => {
         .onConflictDoNothing({ target: academicYears.year });
     }
 
+    const academicYearRows = await db
+      .select({ id: academicYears.id, year: academicYears.year })
+      .from(academicYears);
+    const academicYearIdByYear = new Map(
+      academicYearRows.map((row) => [row.year, row.id]),
+    );
+
     // Insert Terms
     if (data.terms.length) {
       await db
@@ -204,7 +263,12 @@ const seed = async () => {
           data.terms.map((term) => ({
             name: term.name,
             sequenceNumber: term.sequenceNumber,
-            academicYearId: term.academicYearId,
+            academicYearId: resolveAcademicYearId(
+              term.academicYearId,
+              term.startDate,
+              data.academicYears,
+              academicYearIdByYear,
+            ),
             startDate: term.startDate,
             endDate: term.endDate,
           })),
@@ -232,6 +296,16 @@ const seed = async () => {
         .onConflictDoNothing();
     }
 
+    const staffRows = await db
+      .select({ id: staff.id, email: staff.email })
+      .from(staff);
+    const staffIdByEmail = new Map<string, number>();
+    staffRows.forEach((row) => {
+      if (row.email) {
+        staffIdByEmail.set(row.email, row.id);
+      }
+    });
+
     // Insert Subjects
     if (data.subjects.length) {
       await db
@@ -247,48 +321,75 @@ const seed = async () => {
         .onConflictDoNothing({ target: subjects.code });
     }
 
+    const subjectRows = await db
+      .select({ id: subjects.id, code: subjects.code })
+      .from(subjects);
+    const subjectIdByCode = new Map<string, number>();
+    subjectRows.forEach((row) => {
+      if (row.code) {
+        subjectIdByCode.set(row.code, row.id);
+      }
+    });
+
     // Insert Classes
     if (data.classes.length) {
       await db
         .insert(classes)
         .values(
-          data.classes.map((cls) => ({
-            name: cls.name,
-            level: cls.level,
-            capacity: cls.capacity,
-            supervisorId: cls.supervisorId,
-          })),
+          data.classes.map((cls) => {
+            const supervisorSeed = data.staff[cls.supervisorId - 1];
+            if (!supervisorSeed) {
+              throw new Error(
+                `Supervisor reference '${cls.supervisorId}' not found for class '${cls.name}'.`,
+              );
+            }
+
+            const supervisorDbId = staffIdByEmail.get(supervisorSeed.email);
+            if (!supervisorDbId) {
+              throw new Error(
+                `Supervisor '${supervisorSeed.email}' not found in staff table for class '${cls.name}'.`,
+              );
+            }
+
+            return {
+              name: cls.name,
+              level: cls.level,
+              capacity: cls.capacity,
+              supervisorId: supervisorDbId,
+            };
+          }),
         )
         .onConflictDoNothing();
     }
 
-    // Get IDs for building relationships
-    const subjectRows = await db.select({ id: subjects.id }).from(subjects);
-    const subjectIds = subjectRows.map((row) => row.id);
-
-    const classRows = await db.select({ id: classes.id }).from(classes);
-    const classIds = classRows.map((row) => row.id);
-
-    const staffRows = await db.select({ id: staff.id }).from(staff);
-    const staffIds = staffRows.map((row) => row.id);
+    const classRows = await db
+      .select({ id: classes.id, name: classes.name, level: classes.level })
+      .from(classes);
+    const classIdByKey = new Map(
+      classRows.map((row) => [classKey(row.name, row.level), row.id]),
+    );
 
     // Insert Class Subjects
-    if (data.classes.length && subjectIds.length) {
+    if (data.classes.length && subjectIdByCode.size) {
       const classSubjectsData: Array<{
         classId: number;
         subjectId: number;
       }> = [];
-      data.classes.forEach((cls, idx) => {
-        if (classIds[idx]) {
-          cls.subjectIds.forEach((subjIdx) => {
-            if (subjectIds[subjIdx - 1]) {
-              classSubjectsData.push({
-                classId: classIds[idx],
-                subjectId: subjectIds[subjIdx - 1],
-              });
-            }
+      data.classes.forEach((cls) => {
+        const mappedClassId = classIdByKey.get(classKey(cls.name, cls.level));
+        if (!mappedClassId) return;
+
+        cls.subjectIds.forEach((subjectRef) => {
+          const seedSubject = data.subjects[subjectRef - 1];
+          if (!seedSubject) return;
+          const mappedSubjectId = subjectIdByCode.get(seedSubject.code);
+          if (!mappedSubjectId) return;
+
+          classSubjectsData.push({
+            classId: mappedClassId,
+            subjectId: mappedSubjectId,
           });
-        }
+        });
       });
 
       if (classSubjectsData.length) {
@@ -300,22 +401,30 @@ const seed = async () => {
     }
 
     // Insert Staff Subjects
-    if (data.staffSubjects.length && subjectIds.length) {
+    if (data.staffSubjects.length && subjectIdByCode.size) {
       const staffSubjectsData: Array<{
         staffId: number;
         subjectId: number;
       }> = [];
       data.staffSubjects.forEach((ss) => {
-        if (staffIds[ss.staffId - 1]) {
-          ss.subjectIds.forEach((subjIdx) => {
-            if (subjectIds[subjIdx - 1]) {
-              staffSubjectsData.push({
-                staffId: staffIds[ss.staffId - 1],
-                subjectId: subjectIds[subjIdx - 1],
-              });
-            }
+        const seedStaff = data.staff[ss.staffId - 1];
+        if (!seedStaff) return;
+
+        const mappedStaffId = staffIdByEmail.get(seedStaff.email);
+        if (!mappedStaffId) return;
+
+        ss.subjectIds.forEach((subjectRef) => {
+          const seedSubject = data.subjects[subjectRef - 1];
+          if (!seedSubject) return;
+
+          const mappedSubjectId = subjectIdByCode.get(seedSubject.code);
+          if (!mappedSubjectId) return;
+
+          staffSubjectsData.push({
+            staffId: mappedStaffId,
+            subjectId: mappedSubjectId,
           });
-        }
+        });
       });
 
       if (staffSubjectsData.length) {
@@ -360,59 +469,110 @@ const seed = async () => {
         .onConflictDoNothing();
     }
 
-    // Get student and parent IDs
-    const studentRows = await db.select({ id: students.id }).from(students);
-    const studentIds = studentRows.map((row) => row.id);
+    const studentRows = await db
+      .select({ id: students.id, registrationNumber: students.registrationNumber })
+      .from(students);
+    const studentIdByRegistration = new Map<string, number>();
+    studentRows.forEach((row) => {
+      if (row.registrationNumber) {
+        studentIdByRegistration.set(row.registrationNumber, row.id);
+      }
+    });
 
-    const parentRows = await db.select({ id: parents.id }).from(parents);
-    const parentIds = parentRows.map((row) => row.id);
+    const parentRows = await db
+      .select({ id: parents.id, email: parents.email })
+      .from(parents);
+    const parentIdByEmail = new Map<string, number>();
+    parentRows.forEach((row) => {
+      if (row.email) {
+        parentIdByEmail.set(row.email, row.id);
+      }
+    });
 
     // Insert Student Parents
-    if (data.studentParents.length && studentIds.length && parentIds.length) {
+    if (
+      data.studentParents.length &&
+      studentIdByRegistration.size &&
+      parentIdByEmail.size
+    ) {
+      const studentParentRows: Array<{
+        studentId: number;
+        parentId: number;
+        relationship: string;
+      }> = [];
+
+      data.studentParents.forEach((sp) => {
+        const seedStudent = data.students[sp.studentId - 1];
+        const seedParent = data.parents[sp.parentId - 1];
+
+        const mappedStudentId = seedStudent
+          ? studentIdByRegistration.get(seedStudent.registrationNumber)
+          : undefined;
+
+        const mappedParentId = seedParent
+          ? parentIdByEmail.get(seedParent.email)
+          : undefined;
+
+        if (mappedStudentId && mappedParentId) {
+          studentParentRows.push({
+            studentId: mappedStudentId,
+            parentId: mappedParentId,
+            relationship: sp.relationship,
+          });
+        }
+      });
+
       await db
         .insert(studentParents)
-        .values(
-          data.studentParents
-            .map((sp) => ({
-              studentId: studentIds[sp.studentId - 1],
-              parentId: parentIds[sp.parentId - 1],
-              relationship: sp.relationship,
-            }))
-            .filter(
-              (sp) => sp.studentId !== undefined && sp.parentId !== undefined,
-            ),
-        )
+        .values(studentParentRows)
         .onConflictDoNothing();
     }
 
     // Insert Student Class Enrollments
     if (
       data.studentClassEnrollments.length &&
-      studentIds.length &&
-      classIds.length
+      studentIdByRegistration.size &&
+      classIdByKey.size
     ) {
-      const academicYearRows = await db
-        .select({ id: academicYears.id })
-        .from(academicYears);
-      const academicYearIds = academicYearRows.map((row) => row.id);
+      const studentEnrollmentRows: Array<{
+        studentId: number;
+        classId: number;
+        academicYearId: number;
+        enrollmentDate: string;
+      }> = [];
+
+      data.studentClassEnrollments.forEach((sce) => {
+        const seedStudent = data.students[sce.studentId - 1];
+        const seedClass = data.classes[sce.classId - 1];
+
+        const mappedStudentId = seedStudent
+          ? studentIdByRegistration.get(seedStudent.registrationNumber)
+          : undefined;
+
+        const mappedClassId = seedClass
+          ? classIdByKey.get(classKey(seedClass.name, seedClass.level))
+          : undefined;
+
+        const mappedAcademicYearId = resolveAcademicYearId(
+          sce.academicYearId,
+          sce.enrollmentDate,
+          data.academicYears,
+          academicYearIdByYear,
+        );
+
+        if (mappedStudentId && mappedClassId) {
+          studentEnrollmentRows.push({
+            studentId: mappedStudentId,
+            classId: mappedClassId,
+            academicYearId: mappedAcademicYearId,
+            enrollmentDate: sce.enrollmentDate,
+          });
+        }
+      });
 
       await db
         .insert(studentClassEnrollments)
-        .values(
-          data.studentClassEnrollments
-            .map((sce) => ({
-              studentId: studentIds[sce.studentId - 1],
-              classId: classIds[sce.classId - 1],
-              academicYearId: academicYearIds[sce.academicYearId - 1],
-              enrollmentDate: sce.enrollmentDate,
-            }))
-            .filter(
-              (sce) =>
-                sce.studentId !== undefined &&
-                sce.classId !== undefined &&
-                sce.academicYearId !== undefined,
-            ),
-        )
+        .values(studentEnrollmentRows)
         .onConflictDoNothing();
     }
   

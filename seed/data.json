@@ -139,21 +139,21 @@
     {
       "name": "Term 1",
       "sequenceNumber": 1,
-      "academicYearId": 1,
+      "academicYearId": 13,
       "startDate": "2024-01-15",
       "endDate": "2024-04-15"
     },
     {
       "name": "Term 2",
       "sequenceNumber": 2,
-      "academicYearId": 1,
+      "academicYearId": 14,
       "startDate": "2024-05-01",
       "endDate": "2024-08-15"
     },
     {
       "name": "Term 3",
       "sequenceNumber": 3,
-      "academicYearId": 1,
+      "academicYearId": 13,
       "startDate": "2024-09-01",
       "endDate": "2024-12-15"
     }
