@@ -26,7 +26,7 @@ export const livingWithEnum = pgEnum("living_with", [
   "guardian",
   "other_person",
 ]);
-
+export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
 // ============= CORE TABLES =============
 
 /**
@@ -66,9 +66,12 @@ export const staff = pgTable("staff", {
   email: varchar("email", { length: 255 }).unique(),
   phone: varchar("phone", { length: 20 }),
   dateOfBirth: date("date_of_birth"),
+  gender: genderEnum("gender").notNull(),
   staffType: staffTypeEnum("staff_type").notNull(),
   cloudinaryImageUrl: text("cloudinary_image_url"),
+  imageCldPubId: varchar("image_cld_pub_id", { length: 255 }),
   hireDate: date("hire_date").notNull(),
+  registrationNumber: varchar("registration_number", { length: 50 }).unique(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -98,6 +101,7 @@ export const subjects = pgTable("subjects", {
   code: varchar("code", { length: 20 }).unique(),
   description: text("description"),
   cloudinaryImageUrl: text("cloudinary_image_url"),
+  imageCldPubId: varchar("image_cld_pub_id", { length: 255 }),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -142,9 +146,12 @@ export const students = pgTable("students", {
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
   dateOfBirth: date("date_of_birth"),
+  gender: genderEnum("gender").notNull(),
   admissionDate: date("admission_date").notNull(),
   cloudinaryImageUrl: text("cloudinary_image_url"),
+  imageCldPubId: varchar("image_cld_pub_id", { length: 255 }),
   registrationNumber: varchar("registration_number", { length: 50 }).unique(),
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

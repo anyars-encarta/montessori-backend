@@ -63,6 +63,7 @@ type SeedStaff = {
   email: string;
   phone: string;
   dateOfBirth: string;
+  gender: "male" | "female" | "other";
   staffType: "teacher" | "non_teaching";
   hireDate: string;
   isActive: boolean;
@@ -93,6 +94,7 @@ type SeedStudent = {
   firstName: string;
   lastName: string;
   dateOfBirth: string;
+  gender: "male" | "female" | "other";
   admissionDate: string;
   registrationNumber: string;
   cloudinaryImageUrl: string;
@@ -287,6 +289,7 @@ const seed = async () => {
             email: s.email,
             phone: s.phone,
             dateOfBirth: s.dateOfBirth,
+            gender: s.gender || "other",
             staffType: s.staffType,
             hireDate: s.hireDate,
             isActive: s.isActive,
@@ -444,6 +447,7 @@ const seed = async () => {
             firstName: s.firstName,
             lastName: s.lastName,
             dateOfBirth: s.dateOfBirth,
+            gender: s.gender || "other",
             admissionDate: s.admissionDate,
             registrationNumber: s.registrationNumber,
             cloudinaryImageUrl: s.cloudinaryImageUrl,

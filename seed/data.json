@@ -165,6 +165,7 @@
       "email": "sarah.thompson@montessori.edu",
       "phone": "+1-555-0101",
       "dateOfBirth": "1985-03-15",
+      "gender": "female",
       "staffType": "teacher",
       "hireDate": "2020-08-01",
       "isActive": true,
@@ -176,6 +177,7 @@
       "email": "james.mitchell@montessori.edu",
       "phone": "+1-555-0102",
       "dateOfBirth": "1982-07-22",
+      "gender": "male",
       "staffType": "teacher",
       "hireDate": "2019-08-15",
       "isActive": true,
@@ -187,6 +189,7 @@
       "email": "maria.garcia@montessori.edu",
       "phone": "+1-555-0103",
       "dateOfBirth": "1988-11-10",
+      "gender": "female",
       "staffType": "teacher",
       "hireDate": "2021-01-10",
       "isActive": true,
@@ -198,6 +201,7 @@
       "email": "david.chen@montessori.edu",
       "phone": "+1-555-0104",
       "dateOfBirth": "1986-05-28",
+      "gender": "male",
       "staffType": "teacher",
       "hireDate": "2020-09-01",
       "isActive": true,
@@ -209,6 +213,7 @@
       "email": "emma.williams@montessori.edu",
       "phone": "+1-555-0105",
       "dateOfBirth": "1990-02-14",
+      "gender": "female",
       "staffType": "non_teaching",
       "hireDate": "2022-06-01",
       "isActive": true,
@@ -306,6 +311,7 @@
       "firstName": "Arjun",
       "lastName": "Singh",
       "dateOfBirth": "2016-05-10",
+      "gender": "male",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG001",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80"
@@ -314,6 +320,7 @@
       "firstName": "Emily",
       "lastName": "Chen",
       "dateOfBirth": "2016-08-22",
+      "gender": "female",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG002",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80"
@@ -322,6 +329,7 @@
       "firstName": "Zoe",
       "lastName": "Parker",
       "dateOfBirth": "2017-02-14",
+      "gender": "female",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG003",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80"
@@ -330,6 +338,7 @@
       "firstName": "Jacob",
       "lastName": "Miller",
       "dateOfBirth": "2016-11-03",
+      "gender": "male",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG004",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
@@ -338,6 +347,7 @@
       "firstName": "Sara",
       "lastName": "James",
       "dateOfBirth": "2017-06-18",
+      "gender": "female",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG005",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
@@ -346,6 +356,7 @@
       "firstName": "Daniel",
       "lastName": "Wright",
       "dateOfBirth": "2016-09-27",
+      "gender": "male",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG006",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80"
@@ -354,6 +365,7 @@
       "firstName": "Nina",
       "lastName": "Alvarez",
       "dateOfBirth": "2017-03-30",
+      "gender": "female",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG007",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80"
@@ -362,6 +374,7 @@
       "firstName": "Omar",
       "lastName": "Farouk",
       "dateOfBirth": "2016-07-12",
+      "gender": "male",
       "admissionDate": "2024-01-15",
       "registrationNumber": "REG008",
       "cloudinaryImageUrl": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
