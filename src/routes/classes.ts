@@ -1,18 +1,243 @@
 import express from "express";
-import { eq } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
-import { classes } from "../db/schema";
+import {
+  academicYears,
+  classSubjects,
+  classes,
+  positions,
+  staff,
+  studentClassEnrollments,
+  students,
+  subjects,
+  terms,
+} from "../db/schema";
 
 const router = express.Router();
 
+const parsePositiveInt = (value: unknown) => {
+  const parsed = Number.parseInt(String(value), 10);
+  if (Number.isNaN(parsed) || parsed < 1) {
+    return null;
+  }
+  return parsed;
+};
+
 router.get("/", async (req, res) => {
   try {
-    const data = await db.select().from(classes);
-    res.json({
+    const {
+      search,
+      level,
+      supervisorId,
+      subjectId,
+      academicYearId,
+      page = 1,
+      limit = 10,
+    } = req.query;
+
+    const currentPage = Math.max(1, parsePositiveInt(page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;
+
+    const filters = [];
+
+    if (search) {
+      const value = String(search).trim();
+      if (value) {
+        filters.push(ilike(classes.name, `%${value}%`));
+      }
+    }
+
+    if (level) {
+      const value = String(level).trim();
+      if (value) {
+        filters.push(ilike(classes.level, `%${value}%`));
+      }
+    }
+
+    if (supervisorId !== undefined) {
+      const parsedSupervisorId = parsePositiveInt(supervisorId);
+      if (parsedSupervisorId === null) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid supervisorId filter" });
+      }
+      filters.push(eq(classes.supervisorId, parsedSupervisorId));
+    }
+
+    if (subjectId !== undefined) {
+      const parsedSubjectId = parsePositiveInt(subjectId);
+      if (parsedSubjectId === null) {
+        return res.status(400).json({ success: false, error: "Invalid subjectId filter" });
+      }
+
+      const classRowsBySubject = await db
+        .select({ classId: classSubjects.classId })
+        .from(classSubjects)
+        .where(eq(classSubjects.subjectId, parsedSubjectId));
+
+      const classIdsBySubject = [...new Set(classRowsBySubject.map((row) => row.classId))];
+      if (!classIdsBySubject.length) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          pagination: {
+            page: currentPage,
+            limit: limitPerPage,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+      filters.push(inArray(classes.id, classIdsBySubject));
+    }
+
+    if (academicYearId !== undefined) {
+      const parsedAcademicYearId = parsePositiveInt(academicYearId);
+      if (parsedAcademicYearId === null) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Invalid academicYearId filter" });
+      }
+
+      const classRowsByAcademicYear = await db
+        .select({ classId: studentClassEnrollments.classId })
+        .from(studentClassEnrollments)
+        .where(eq(studentClassEnrollments.academicYearId, parsedAcademicYearId));
+
+      const classIdsByAcademicYear = [
+        ...new Set(classRowsByAcademicYear.map((row) => row.classId)),
+      ];
+      if (!classIdsByAcademicYear.length) {
+        return res.status(200).json({
+          success: true,
+          data: [],
+          pagination: {
+            page: currentPage,
+            limit: limitPerPage,
+            total: 0,
+            totalPages: 0,
+          },
+        });
+      }
+      filters.push(inArray(classes.id, classIdsByAcademicYear));
+    }
+
+    const whereClause = filters.length ? and(...filters) : undefined;
+
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(classes)
+      .where(whereClause);
+
+    const totalCount = Number(countResult[0]?.count ?? 0);
+    const totalPages = totalCount ? Math.ceil(totalCount / limitPerPage) : 0;
+
+    const classRows = await db
+      .select({
+        class: classes,
+        supervisor: staff,
+      })
+      .from(classes)
+      .leftJoin(staff, eq(classes.supervisorId, staff.id))
+      .where(whereClause)
+      .orderBy(desc(classes.createdAt))
+      .limit(limitPerPage)
+      .offset(offset);
+
+    if (!classRows.length) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        pagination: {
+          page: currentPage,
+          limit: limitPerPage,
+          total: totalCount,
+          totalPages,
+        },
+      });
+    }
+
+    const classIds = classRows.map((row) => row.class.id);
+
+    const [subjectRows, enrollmentRows, positionRows] = await Promise.all([
+      db
+        .select({
+          classId: classSubjects.classId,
+          subjectId: classSubjects.subjectId,
+          subject: subjects,
+        })
+        .from(classSubjects)
+        .leftJoin(subjects, eq(classSubjects.subjectId, subjects.id))
+        .where(inArray(classSubjects.classId, classIds)),
+      db
+        .select({
+          enrollment: studentClassEnrollments,
+          student: students,
+          academicYear: academicYears,
+        })
+        .from(studentClassEnrollments)
+        .leftJoin(students, eq(studentClassEnrollments.studentId, students.id))
+        .leftJoin(
+          academicYears,
+          eq(studentClassEnrollments.academicYearId, academicYears.id),
+        )
+        .where(inArray(studentClassEnrollments.classId, classIds)),
+      db
+        .select({
+          position: positions,
+          student: students,
+          academicYear: academicYears,
+          term: terms,
+        })
+        .from(positions)
+        .leftJoin(students, eq(positions.studentId, students.id))
+        .leftJoin(academicYears, eq(positions.academicYearId, academicYears.id))
+        .leftJoin(terms, eq(positions.termId, terms.id))
+        .where(inArray(positions.classId, classIds)),
+    ]);
+
+    const subjectsByClass = new Map<number, typeof subjectRows>();
+    for (const row of subjectRows) {
+      const existing = subjectsByClass.get(row.classId) ?? [];
+      existing.push(row);
+      subjectsByClass.set(row.classId, existing);
+    }
+
+    const enrollmentsByClass = new Map<number, typeof enrollmentRows>();
+    for (const row of enrollmentRows) {
+      const existing = enrollmentsByClass.get(row.enrollment.classId) ?? [];
+      existing.push(row);
+      enrollmentsByClass.set(row.enrollment.classId, existing);
+    }
+
+    const positionsByClass = new Map<number, typeof positionRows>();
+    for (const row of positionRows) {
+      const existing = positionsByClass.get(row.position.classId) ?? [];
+      existing.push(row);
+      positionsByClass.set(row.position.classId, existing);
+    }
+
+    const data = classRows.map((row) => ({
+      ...row.class,
+      supervisor: row.supervisor,
+      subjects: subjectsByClass.get(row.class.id) ?? [],
+      enrollments: enrollmentsByClass.get(row.class.id) ?? [],
+      positions: positionsByClass.get(row.class.id) ?? [],
+    }));
+
+    return res.status(200).json({
       success: true,
       data,
+      pagination: {
+        page: currentPage,
+        limit: limitPerPage,
+        total: totalCount,
+        totalPages,
+      },
     });
   } catch (error) {
+    console.error("GET /classes error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch classes",
@@ -23,10 +248,19 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const classId = Number.parseInt(id, 10);
+
+    if (Number.isNaN(classId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid class id",
+      });
+    }
+
     const data = await db
       .select()
       .from(classes)
-      .where(eq(classes.id, parseInt(id)));
+      .where(eq(classes.id, classId));
     
     if (!data.length) {
       return res.status(404).json({
