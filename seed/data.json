@@ -139,23 +139,44 @@
     {
       "name": "Term 1",
       "sequenceNumber": 1,
-      "academicYearId": 13,
+      "academicYearId": 1,
       "startDate": "2024-01-15",
       "endDate": "2024-04-15"
     },
     {
       "name": "Term 2",
       "sequenceNumber": 2,
-      "academicYearId": 14,
+      "academicYearId": 1,
       "startDate": "2024-05-01",
       "endDate": "2024-08-15"
     },
     {
       "name": "Term 3",
       "sequenceNumber": 3,
-      "academicYearId": 13,
+      "academicYearId": 1,
       "startDate": "2024-09-01",
       "endDate": "2024-12-15"
+    },
+    {
+      "name": "Term 1",
+      "sequenceNumber": 1,
+      "academicYearId": 2,
+      "startDate": "2025-01-15",
+      "endDate": "2025-04-15"
+    },
+    {
+      "name": "Term 2",
+      "sequenceNumber": 2,
+      "academicYearId": 2,
+      "startDate": "2025-05-01",
+      "endDate": "2025-08-15"
+    },
+    {
+      "name": "Term 3",
+      "sequenceNumber": 3,
+      "academicYearId": 2,
+      "startDate": "2025-09-01",
+      "endDate": "2025-12-15"
     }
   ],
   "staff": [
@@ -465,5 +486,824 @@
     { "studentId": 6, "classId": 3, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
     { "studentId": 7, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
     { "studentId": 8, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" }
+  ],
+  "studentSiblings": [
+    { "studentId": 1, "siblingId": 4 },
+    { "studentId": 4, "siblingId": 1 },
+    { "studentId": 2, "siblingId": 5 },
+    { "studentId": 5, "siblingId": 2 }
+  ],
+  "healthDetails": [
+    {
+      "studentId": 1,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": "Mild asthma",
+      "lastCheckupDate": "2024-03-15"
+    },
+    {
+      "studentId": 2,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": null,
+      "lastCheckupDate": "2024-03-20"
+    },
+    {
+      "studentId": 3,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": "Eczema",
+      "lastCheckupDate": "2024-03-18"
+    },
+    {
+      "studentId": 4,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": null,
+      "lastCheckupDate": "2024-03-17"
+    },
+    {
+      "studentId": 5,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": "Food allergies",
+      "lastCheckupDate": "2024-03-19"
+    },
+    {
+      "studentId": 6,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": null,
+      "lastCheckupDate": "2024-03-21"
+    },
+    {
+      "studentId": 7,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": null,
+      "lastCheckupDate": "2024-03-16"
+    },
+    {
+      "studentId": 8,
+      "diphtheria": true,
+      "polio": true,
+      "whoopingCough": true,
+      "tetanus": true,
+      "measles": true,
+      "tuberculosis": true,
+      "otherConditions": "Hearing impairment",
+      "lastCheckupDate": "2024-03-22"
+    }
+  ],
+  "otherSignificantData": [
+    {
+      "studentId": 1,
+      "livingWith": "both_parents",
+      "otherDetails": "Lives with parents and older sister"
+    },
+    {
+      "studentId": 2,
+      "livingWith": "both_parents",
+      "otherDetails": "Lives with parents"
+    },
+    {
+      "studentId": 3,
+      "livingWith": "father_only",
+      "otherDetails": "Lives with father and stepmother"
+    },
+    {
+      "studentId": 4,
+      "livingWith": "both_parents",
+      "otherDetails": "Lives with parents and younger brother"
+    },
+    {
+      "studentId": 5,
+      "livingWith": "both_parents",
+      "otherDetails": "Lives with parents"
+    },
+    {
+      "studentId": 6,
+      "livingWith": "mother_only",
+      "otherDetails": "Lives with mother"
+    },
+    {
+      "studentId": 7,
+      "livingWith": "guardian",
+      "otherDetails": "Lives with grandparents"
+    },
+    {
+      "studentId": 8,
+      "livingWith": "both_parents",
+      "otherDetails": "Lives with parents"
+    }
+  ],
+  "previousSchools": [
+    {
+      "studentId": 1,
+      "schoolName": "St. Mary's Primary School",
+      "dateOfAdmission": "2020-01-10",
+      "ageAtAdmission": 4,
+      "dateLastAttended": "2023-12-15"
+    },
+    {
+      "studentId": 3,
+      "schoolName": "Riverside Academy",
+      "dateOfAdmission": "2019-02-01",
+      "ageAtAdmission": 3,
+      "dateLastAttended": "2023-11-30"
+    },
+    {
+      "studentId": 5,
+      "schoolName": "Green Hill Learning Centre",
+      "dateOfAdmission": "2020-06-15",
+      "ageAtAdmission": 3,
+      "dateLastAttended": "2023-12-20"
+    },
+    {
+      "studentId": 8,
+      "schoolName": "Al-Noor Primary",
+      "dateOfAdmission": "2021-03-01",
+      "ageAtAdmission": 4,
+      "dateLastAttended": "2023-12-15"
+    }
+  ],
+  "fees": [
+    {
+      "name": "Tuition Fee P1",
+      "description": "Monthly tuition fee for Primary 1",
+      "amount": "5000",
+      "feeType": "tuition",
+      "academicYearId": 1,
+      "applicableToLevel": "P1"
+    },
+    {
+      "name": "Tuition Fee P2",
+      "description": "Monthly tuition fee for Primary 2",
+      "amount": "5500",
+      "feeType": "tuition",
+      "academicYearId": 1,
+      "applicableToLevel": "P2"
+    },
+    {
+      "name": "Tuition Fee P3",
+      "description": "Monthly tuition fee for Primary 3",
+      "amount": "6000",
+      "feeType": "tuition",
+      "academicYearId": 1,
+      "applicableToLevel": "P3"
+    },
+    {
+      "name": "Tuition Fee P4",
+      "description": "Monthly tuition fee for Primary 4",
+      "amount": "6500",
+      "feeType": "tuition",
+      "academicYearId": 1,
+      "applicableToLevel": "P4"
+    },
+    {
+      "name": "Admission Fee",
+      "description": "One-time admission fee",
+      "amount": "15000",
+      "feeType": "admission",
+      "academicYearId": 1,
+      "applicableToLevel": null
+    },
+    {
+      "name": "Promotion Fee",
+      "description": "Promotion to next class",
+      "amount": "8000",
+      "feeType": "promotion",
+      "academicYearId": 1,
+      "applicableToLevel": null
+    },
+    {
+      "name": "Activity Fee",
+      "description": "Co-curricular activities and sports",
+      "amount": "2000",
+      "feeType": "other",
+      "academicYearId": 1,
+      "applicableToLevel": null
+    }
+  ],
+  "studentFees": [
+    {
+      "studentId": 1,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "amount": "5000",
+      "amountPaid": "5000",
+      "status": "paid",
+      "dueDate": "2024-02-15"
+    },
+    {
+      "studentId": 1,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 2,
+      "amount": "5000",
+      "amountPaid": "5000",
+      "status": "paid",
+      "dueDate": "2024-05-15"
+    },
+    {
+      "studentId": 1,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 3,
+      "amount": "5000",
+      "amountPaid": "3000",
+      "status": "partial",
+      "dueDate": "2024-09-15"
+    },
+    {
+      "studentId": 2,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "amount": "5000",
+      "amountPaid": "5000",
+      "status": "paid",
+      "dueDate": "2024-02-15"
+    },
+    {
+      "studentId": 2,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 2,
+      "amount": "5000",
+      "amountPaid": "5000",
+      "status": "paid",
+      "dueDate": "2024-05-15"
+    },
+    {
+      "studentId": 2,
+      "feeId": 1,
+      "academicYearId": 1,
+      "termId": 3,
+      "amount": "5000",
+      "amountPaid": "5000",
+      "status": "paid",
+      "dueDate": "2024-09-15"
+    },
+    {
+      "studentId": 3,
+      "feeId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "amount": "5500",
+      "amountPaid": "5500",
+      "status": "paid",
+      "dueDate": "2024-02-15"
+    },
+    {
+      "studentId": 3,
+      "feeId": 2,
+      "academicYearId": 1,
+      "termId": 2,
+      "amount": "5500",
+      "amountPaid": "0",
+      "status": "pending",
+      "dueDate": "2024-05-15"
+    }
+  ],
+  "payments": [
+    {
+      "studentId": 1,
+      "studentFeeId": 1,
+      "amount": "5000",
+      "paymentDate": "2024-02-01",
+      "paymentMethod": "bank_transfer",
+      "reference": "TRANS001",
+      "notes": "Term 1 tuition"
+    },
+    {
+      "studentId": 1,
+      "studentFeeId": 2,
+      "amount": "5000",
+      "paymentDate": "2024-05-05",
+      "paymentMethod": "cheque",
+      "reference": "CHQ001",
+      "notes": "Term 2 tuition"
+    },
+    {
+      "studentId": 1,
+      "studentFeeId": 3,
+      "amount": "3000",
+      "paymentDate": "2024-09-20",
+      "paymentMethod": "cash",
+      "reference": "CASH001",
+      "notes": "Term 3 tuition partial payment"
+    },
+    {
+      "studentId": 2,
+      "studentFeeId": 4,
+      "amount": "5000",
+      "paymentDate": "2024-02-02",
+      "paymentMethod": "bank_transfer",
+      "reference": "TRANS002",
+      "notes": "Term 1 tuition"
+    },
+    {
+      "studentId": 2,
+      "studentFeeId": 5,
+      "amount": "5000",
+      "paymentDate": "2024-05-08",
+      "paymentMethod": "bank_transfer",
+      "reference": "TRANS003",
+      "notes": "Term 2 tuition"
+    },
+    {
+      "studentId": 2,
+      "studentFeeId": 6,
+      "amount": "5000",
+      "paymentDate": "2024-09-30",
+      "paymentMethod": "cheque",
+      "reference": "CHQ002",
+      "notes": "Term 3 tuition"
+    },
+    {
+      "studentId": 3,
+      "studentFeeId": 7,
+      "amount": "5500",
+      "paymentDate": "2024-02-05",
+      "paymentMethod": "bank_transfer",
+      "reference": "TRANS004",
+      "notes": "Term 1 tuition"
+    }
+  ],
+  "continuousAssessments": [
+    {
+      "studentId": 1,
+      "subjectId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
+    },
+    {
+      "studentId": 1,
+      "subjectId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "19",
+      "examMark": "75",
+      "totalMark": "94"
+    },
+    {
+      "studentId": 1,
+      "subjectId": 3,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "17",
+      "examMark": "68",
+      "totalMark": "85"
+    },
+    {
+      "studentId": 1,
+      "subjectId": 4,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "16",
+      "examMark": "64",
+      "totalMark": "80"
+    },
+    {
+      "studentId": 1,
+      "subjectId": 5,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "20",
+      "examMark": "76",
+      "totalMark": "96"
+    },
+    {
+      "studentId": 1,
+      "subjectId": 6,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "18",
+      "examMark": "70",
+      "totalMark": "88"
+    },
+    {
+      "studentId": 2,
+      "subjectId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "19",
+      "examMark": "78",
+      "totalMark": "97"
+    },
+    {
+      "studentId": 2,
+      "subjectId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "20",
+      "examMark": "82",
+      "totalMark": "102"
+    },
+    {
+      "studentId": 2,
+      "subjectId": 3,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
+    },
+    {
+      "studentId": 2,
+      "subjectId": 4,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "17",
+      "examMark": "70",
+      "totalMark": "87"
+    },
+    {
+      "studentId": 3,
+      "subjectId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "15",
+      "examMark": "60",
+      "totalMark": "75"
+    },
+    {
+      "studentId": 3,
+      "subjectId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "classMark": "14",
+      "examMark": "56",
+      "totalMark": "70"
+    }
+  ],
+  "positions": [
+    {
+      "studentId": 1,
+      "classId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 2,
+      "totalScore": "535",
+      "grade": "A",
+      "remarks": "Excellent performance in all subjects"
+    },
+    {
+      "studentId": 2,
+      "classId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 1,
+      "totalScore": "576",
+      "grade": "A+",
+      "remarks": "Outstanding performance, top of class"
+    },
+    {
+      "studentId": 3,
+      "classId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 5,
+      "totalScore": "340",
+      "grade": "B",
+      "remarks": "Good effort, needs improvement in Mathematics"
+    },
+    {
+      "studentId": 4,
+      "classId": 2,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 3,
+      "totalScore": "425",
+      "grade": "A",
+      "remarks": "Well-rounded student"
+    },
+    {
+      "studentId": 5,
+      "classId": 3,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 2,
+      "totalScore": "505",
+      "grade": "A",
+      "remarks": "Consistent high performance"
+    },
+    {
+      "studentId": 6,
+      "classId": 3,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 4,
+      "totalScore": "475",
+      "grade": "B+",
+      "remarks": "Good student, keep improving"
+    },
+    {
+      "studentId": 7,
+      "classId": 4,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 3,
+      "totalScore": "515",
+      "grade": "A",
+      "remarks": "Very good performance this term"
+    },
+    {
+      "studentId": 8,
+      "classId": 4,
+      "academicYearId": 1,
+      "termId": 1,
+      "position": 6,
+      "totalScore": "385",
+      "grade": "B",
+      "remarks": "Satisfactory performance, needs coaching"
+    }
+  ],
+  "expenseCategories": [
+    {
+      "name": "Staff Salaries",
+      "description": "Monthly salary payments for staff members"
+    },
+    {
+      "name": "Maintenance",
+      "description": "Building maintenance and repairs"
+    },
+    {
+      "name": "Supplies",
+      "description": "Office and learning supplies"
+    },
+    {
+      "name": "Utilities",
+      "description": "Electricity, water, internet"
+    },
+    {
+      "name": "Staff Development",
+      "description": "Training and professional development"
+    },
+    {
+      "name": "Transportation",
+      "description": "School bus and vehicle expenses"
+    },
+    {
+      "name": "Events",
+      "description": "School events and celebrations"
+    }
+  ],
+  "expenses": [
+    {
+      "categoryId": 1,
+      "description": "Salaries - January 2024",
+      "amount": "250000",
+      "expenseDate": "2024-01-31",
+      "vendor": "Payroll System",
+      "reference": "SAL-2024-01"
+    },
+    {
+      "categoryId": 2,
+      "description": "Repair of classroom 3 roof",
+      "amount": "45000",
+      "expenseDate": "2024-02-10",
+      "vendor": "BuildRight Contractors",
+      "reference": "MAINT-001"
+    },
+    {
+      "categoryId": 3,
+      "description": "Exercise books and writing materials",
+      "amount": "12000",
+      "expenseDate": "2024-02-15",
+      "vendor": "Educational Supplies Ltd",
+      "reference": "SUPP-001"
+    },
+    {
+      "categoryId": 4,
+      "description": "Electricity bill - January",
+      "amount": "18000",
+      "expenseDate": "2024-02-05",
+      "vendor": "Power Company",
+      "reference": "UTIL-2024-01"
+    },
+    {
+      "categoryId": 5,
+      "description": "Teacher training workshop",
+      "amount": "8000",
+      "expenseDate": "2024-02-20",
+      "vendor": "Education Training Centre",
+      "reference": "TRAIN-001"
+    },
+    {
+      "categoryId": 6,
+      "description": "School bus maintenance",
+      "amount": "15000",
+      "expenseDate": "2024-02-28",
+      "vendor": "Auto Care Services",
+      "reference": "TRANS-001"
+    },
+    {
+      "categoryId": 7,
+      "description": "Staff appreciation event",
+      "amount": "25000",
+      "expenseDate": "2024-03-01",
+      "vendor": "Event Management",
+      "reference": "EVENT-001"
+    }
+  ],
+  "studentAttendances": [
+    {
+      "studentId": 1,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 1,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 1,
+      "attendanceDate": "2024-03-04",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 2,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 2,
+      "attendanceDate": "2024-03-02",
+      "status": "absent",
+      "remarks": "Sick leave"
+    },
+    {
+      "studentId": 2,
+      "attendanceDate": "2024-03-04",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 3,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 3,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 4,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 4,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 5,
+      "attendanceDate": "2024-03-01",
+      "status": "absent",
+      "remarks": "Excused absence"
+    },
+    {
+      "studentId": 5,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 6,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 7,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "studentId": 8,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    }
+  ],
+  "staffAttendances": [
+    {
+      "staffId": 1,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 1,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 1,
+      "attendanceDate": "2024-03-04",
+      "status": "absent",
+      "remarks": "Conference attendance"
+    },
+    {
+      "staffId": 2,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 2,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 2,
+      "attendanceDate": "2024-03-04",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 3,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 3,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 4,
+      "attendanceDate": "2024-03-01",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 4,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    },
+    {
+      "staffId": 5,
+      "attendanceDate": "2024-03-01",
+      "status": "absent",
+      "remarks": "Medical appointment"
+    },
+    {
+      "staffId": 5,
+      "attendanceDate": "2024-03-02",
+      "status": "present",
+      "remarks": null
+    }
   ]
 }
