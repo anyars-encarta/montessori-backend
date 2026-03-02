@@ -257,27 +257,95 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    const data = await db
-      .select()
+    const classRow = await db
+      .select({
+        class: classes,
+        supervisor: staff,
+      })
       .from(classes)
+      .leftJoin(staff, eq(classes.supervisorId, staff.id))
       .where(eq(classes.id, classId));
     
-    if (!data.length) {
+    if (!classRow.length) {
       return res.status(404).json({
         success: false,
         error: "Class not found",
       });
     }
 
+    const [subjectRows, enrollmentRows] = await Promise.all([
+      db
+        .select({
+          classId: classSubjects.classId,
+          subjectId: classSubjects.subjectId,
+          subject: subjects,
+        })
+        .from(classSubjects)
+        .leftJoin(subjects, eq(classSubjects.subjectId, subjects.id))
+        .where(eq(classSubjects.classId, classId)),
+      db
+        .select({
+          enrollment: studentClassEnrollments,
+          student: students,
+          academicYear: academicYears,
+        })
+        .from(studentClassEnrollments)
+        .leftJoin(students, eq(studentClassEnrollments.studentId, students.id))
+        .leftJoin(
+          academicYears,
+          eq(studentClassEnrollments.academicYearId, academicYears.id),
+        )
+        .where(eq(studentClassEnrollments.classId, classId)),
+    ]);
+
+    const data = {
+      ...classRow[0]?.class,
+      supervisor: classRow[0]?.supervisor,
+      subjects: subjectRows,
+      enrollments: enrollmentRows,
+    };
+
     res.json({
       success: true,
-      data: data[0],
+      data,
     });
   } catch (error) {
+    console.error("GET /classes/:id error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch class",
     });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const classId = Number.parseInt(req.params.id, 10);
+
+    if (!Number.isFinite(classId) || classId <= 0) {
+      return res.status(400).json({ error: "Invalid class id" });
+    }
+
+    // Check if class exists
+    const existingClass = await db
+      .select({ id: classes.id })
+      .from(classes)
+      .where(eq(classes.id, classId));
+
+    if (!existingClass || existingClass.length === 0) {
+      return res.status(404).json({ error: "Class not found" });
+    }
+
+    // Delete the class (cascades to enrollments due to schema)
+    await db.delete(classes).where(eq(classes.id, classId));
+
+    res.status(200).json({
+      success: true,
+      message: "Class deleted successfully",
+    });
+  } catch (e) {
+    console.error(`DELETE /classes/:id error:, ${e}`);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
 
