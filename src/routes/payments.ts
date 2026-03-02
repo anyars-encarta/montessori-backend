@@ -1,9 +1,55 @@
 import express from "express";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { payments } from "../db/schema";
 
 const router = express.Router();
+
+router.get("/yearly-summary", async (req, res) => {
+  try {
+    const currentYear = new Date().getFullYear();
+    
+    const monthNames = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December"
+    ];
+    
+    const monthlySummary = await db
+      .select({
+        month: sql<number>`EXTRACT(MONTH FROM ${payments.paymentDate})`.as("month"),
+        totalPayments: sql<string>`SUM(${payments.amount})`
+      })
+      .from(payments)
+      .where(
+        sql`EXTRACT(YEAR FROM ${payments.paymentDate}) = ${currentYear}`
+      )
+      .groupBy(sql`EXTRACT(MONTH FROM ${payments.paymentDate})`)
+      .orderBy(sql`EXTRACT(MONTH FROM ${payments.paymentDate})`);
+    
+    // Format response with month names
+    const formattedData = monthNames.map((monthName, index) => {
+      const monthData = monthlySummary.find(
+        (item) => parseInt(item.month as any) === index + 1
+      );
+      return {
+        month: monthName,
+        monthNumber: index + 1,
+        total: monthData?.totalPayments ? parseFloat(monthData.totalPayments as string) : 0,
+      };
+    });
+
+    res.json({
+      success: true,
+      year: currentYear,
+      data: formattedData,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch yearly payment summary",
+    });
+  }
+});
 
 router.get("/", async (req, res) => {
   try {
