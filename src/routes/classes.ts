@@ -23,6 +23,105 @@ const parsePositiveInt = (value: unknown) => {
   return parsed;
 };
 
+router.post("/", async (req, res) => {
+  try {
+    const { name, level, capacity, supervisorId, subjectIds } = req.body;
+
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    const trimmedLevel = typeof level === "string" ? level.trim() : "";
+    const parsedCapacity = Number.parseInt(String(capacity), 10);
+    const parsedSupervisorId = parsePositiveInt(supervisorId);
+
+    if (!trimmedName) {
+      return res.status(400).json({ success: false, error: "name is required" });
+    }
+
+    if (!trimmedLevel) {
+      return res.status(400).json({ success: false, error: "level is required" });
+    }
+
+    if (!Number.isFinite(parsedCapacity) || parsedCapacity < 0) {
+      return res
+        .status(400)
+        .json({ success: false, error: "capacity must be a non-negative integer" });
+    }
+
+    if (parsedSupervisorId === null) {
+      return res
+        .status(400)
+        .json({ success: false, error: "supervisorId must be a positive integer" });
+    }
+
+    const supervisorExists = await db
+      .select({ id: staff.id })
+      .from(staff)
+      .where(eq(staff.id, parsedSupervisorId));
+
+    if (!supervisorExists.length) {
+      return res.status(404).json({ success: false, error: "Supervisor not found" });
+    }
+
+    const parsedSubjectIds = Array.isArray(subjectIds)
+      ? [...new Set(subjectIds.map((value) => parsePositiveInt(value)).filter((v) => v !== null))]
+      : [];
+
+    if (Array.isArray(subjectIds) && parsedSubjectIds.length !== subjectIds.length) {
+      return res.status(400).json({
+        success: false,
+        error: "subjectIds must be an array of positive integers",
+      });
+    }
+
+    if (parsedSubjectIds.length) {
+      const foundSubjects = await db
+        .select({ id: subjects.id })
+        .from(subjects)
+        .where(inArray(subjects.id, parsedSubjectIds));
+
+      if (foundSubjects.length !== parsedSubjectIds.length) {
+        return res.status(400).json({
+          success: false,
+          error: "One or more subjectIds are invalid",
+        });
+      }
+    }
+
+    const [createdClass] = await db
+      .insert(classes)
+      .values({
+        name: trimmedName,
+        level: trimmedLevel,
+        capacity: parsedCapacity,
+        supervisorId: parsedSupervisorId,
+      })
+      .returning();
+
+    if (!createdClass) {
+      return res.status(400).json({
+        success: false,
+        error: "Failed to create class",
+      });
+    }
+
+    if (parsedSubjectIds.length) {
+      await db.insert(classSubjects).values(
+        parsedSubjectIds.map((subjectId) => ({
+          classId: createdClass.id,
+          subjectId,
+        })),
+      );
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: createdClass,
+    });
+  } catch (error) {
+    console.error("POST /classes error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const {

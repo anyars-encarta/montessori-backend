@@ -87,6 +87,7 @@ export const classes = pgTable("classes", {
   level: varchar("level", { length: 50 }).notNull(), // e.g., "Primary 1", "Primary 2"
   capacity: integer("capacity").notNull().default(0),
   supervisorId: integer("supervisor_id").notNull().references(() => staff.id),
+  subjectIds: integer("subject_ids").array().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

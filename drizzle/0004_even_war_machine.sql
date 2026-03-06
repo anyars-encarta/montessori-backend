@@ -1,0 +1,1 @@
+ALTER TABLE "classes" ADD COLUMN "subject_ids" integer[] DEFAULT '{}' NOT NULL;

@@ -487,6 +487,7 @@ const seed = async () => {
             level: cls.level,
             capacity: cls.capacity,
             supervisorId: supervisorDbId,
+            subjectsIds: cls.subjectIds,
           };
         }),
       )
