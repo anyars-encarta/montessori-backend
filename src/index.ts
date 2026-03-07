@@ -32,10 +32,35 @@ import { auth } from "./lib/auth.js";
 const app = express();
 const PORT = 8000;
 
+const configuredFrontendUrl = process.env.FRONTEND_URL?.trim();
+
+const allowedOrigins = new Set<string>([
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "http://localhost:4173",
+  "http://127.0.0.1:4173",
+]);
+
+if (configuredFrontendUrl) {
+  allowedOrigins.add(configuredFrontendUrl);
+}
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL, // React app URL
-    methods: ["GET", "POST", "PUT", "DELETE"], // Specify allowed HTTP methods
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+
+      if (allowedOrigins.has(origin)) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error(`CORS blocked for origin: ${origin}`));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true, // allow cookies
   }),
 );
