@@ -399,23 +399,161 @@ router.get("/:id", async (req, res) => {
       });
     }
 
-    const data = await db
+    const studentRows = await db
       .select()
       .from(students)
       .where(eq(students.id, studentId));
     
-    if (!data.length) {
+    if (!studentRows.length) {
       return res.status(404).json({
         success: false,
         error: "Student not found",
       });
     }
 
+    const student = studentRows[0];
+
+    const [
+      parentRelations,
+      siblingRelations,
+      siblingStudents,
+      healthRows,
+      otherSignificantRows,
+      previousSchoolRows,
+      enrollmentRows,
+      assessmentRows,
+      positionRows,
+      feeRows,
+      paymentRows,
+      attendanceRows,
+    ] = await Promise.all([
+      db
+        .select({
+          studentId: studentParents.studentId,
+          parentId: studentParents.parentId,
+          relationship: studentParents.relationship,
+          parent: parents,
+        })
+        .from(studentParents)
+        .innerJoin(parents, eq(studentParents.parentId, parents.id))
+        .where(eq(studentParents.studentId, studentId)),
+      db
+        .select({
+          studentId: studentSiblings.studentId,
+          siblingId: studentSiblings.siblingId,
+        })
+        .from(studentSiblings)
+        .where(eq(studentSiblings.studentId, studentId)),
+      db.select().from(students),
+      db
+        .select()
+        .from(healthDetails)
+        .where(eq(healthDetails.studentId, studentId)),
+      db
+        .select()
+        .from(otherSignificantData)
+        .where(eq(otherSignificantData.studentId, studentId)),
+      db
+        .select()
+        .from(previousSchools)
+        .where(eq(previousSchools.studentId, studentId)),
+      db
+        .select({
+          enrollment: studentClassEnrollments,
+          class: classes,
+          supervisor: staff,
+          academicYear: academicYears,
+        })
+        .from(studentClassEnrollments)
+        .leftJoin(classes, eq(studentClassEnrollments.classId, classes.id))
+        .leftJoin(staff, eq(classes.supervisorId, staff.id))
+        .leftJoin(
+          academicYears,
+          eq(studentClassEnrollments.academicYearId, academicYears.id),
+        )
+        .where(eq(studentClassEnrollments.studentId, studentId)),
+      db
+        .select({
+          assessment: continuousAssessments,
+          subject: subjects,
+          academicYear: academicYears,
+          term: terms,
+        })
+        .from(continuousAssessments)
+        .leftJoin(subjects, eq(continuousAssessments.subjectId, subjects.id))
+        .leftJoin(
+          academicYears,
+          eq(continuousAssessments.academicYearId, academicYears.id),
+        )
+        .leftJoin(terms, eq(continuousAssessments.termId, terms.id))
+        .where(eq(continuousAssessments.studentId, studentId)),
+      db
+        .select({
+          position: positions,
+          class: classes,
+          academicYear: academicYears,
+          term: terms,
+        })
+        .from(positions)
+        .leftJoin(classes, eq(positions.classId, classes.id))
+        .leftJoin(academicYears, eq(positions.academicYearId, academicYears.id))
+        .leftJoin(terms, eq(positions.termId, terms.id))
+        .where(eq(positions.studentId, studentId)),
+      db
+        .select({
+          studentFee: studentFees,
+          fee: fees,
+          academicYear: academicYears,
+          term: terms,
+        })
+        .from(studentFees)
+        .leftJoin(fees, eq(studentFees.feeId, fees.id))
+        .leftJoin(academicYears, eq(studentFees.academicYearId, academicYears.id))
+        .leftJoin(terms, eq(studentFees.termId, terms.id))
+        .where(eq(studentFees.studentId, studentId)),
+      db
+        .select({
+          payment: payments,
+          studentFee: studentFees,
+        })
+        .from(payments)
+        .leftJoin(studentFees, eq(payments.studentFeeId, studentFees.id))
+        .where(eq(payments.studentId, studentId)),
+      db
+        .select()
+        .from(studentAttendances)
+        .where(eq(studentAttendances.studentId, studentId)),
+    ]);
+
+    const studentById = new Map(siblingStudents.map((row) => [row.id, row]));
+
+    const siblingRelationsWithStudents = siblingRelations.map((relation) => ({
+      studentId: relation.studentId,
+      siblingId: relation.siblingId,
+      sibling: studentById.get(relation.siblingId) ?? null,
+    }));
+
+    const data = {
+      ...student,
+      parentRelations,
+      siblingRelations: siblingRelationsWithStudents,
+      healthDetails: healthRows[0] ?? null,
+      otherSignificantData: otherSignificantRows[0] ?? null,
+      previousSchools: previousSchoolRows,
+      enrollments: enrollmentRows,
+      assessments: assessmentRows,
+      positions: positionRows,
+      fees: feeRows,
+      payments: paymentRows,
+      attendances: attendanceRows,
+    };
+
     res.json({
       success: true,
-      data: data[0],
+      data,
     });
   } catch (error) {
+    console.error("GET /students/:id error:", error);
     res.status(500).json({
       success: false,
       error: "Failed to fetch student",
