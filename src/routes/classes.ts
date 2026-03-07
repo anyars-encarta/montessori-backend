@@ -344,6 +344,96 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/:id/students", async (req, res) => {
+  try {
+    const classId = parsePositiveInt(req.params.id);
+    const { page = 1, limit = 10 } = req.query;
+
+    if (classId === null) {
+      return res.status(400).json({ success: false, error: "Invalid class id" });
+    }
+
+    const classExists = await db
+      .select({ id: classes.id })
+      .from(classes)
+      .where(eq(classes.id, classId));
+
+    if (!classExists.length) {
+      return res.status(404).json({ success: false, error: "Class not found" });
+    }
+
+    const currentPage = Math.max(1, parsePositiveInt(page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;
+
+    const baseSelect = {
+      id: students.id,
+      firstName: students.firstName,
+      lastName: students.lastName,
+      dateOfBirth: students.dateOfBirth,
+      gender: students.gender,
+      admissionDate: students.admissionDate,
+      cloudinaryImageUrl: students.cloudinaryImageUrl,
+      imageCldPubId: students.imageCldPubId,
+      registrationNumber: students.registrationNumber,
+      isActive: students.isActive,
+      createdAt: students.createdAt,
+      updatedAt: students.updatedAt,
+    };
+
+    const groupByFields = [
+      students.id,
+      students.firstName,
+      students.lastName,
+      students.dateOfBirth,
+      students.gender,
+      students.admissionDate,
+      students.cloudinaryImageUrl,
+      students.imageCldPubId,
+      students.registrationNumber,
+      students.isActive,
+      students.createdAt,
+      students.updatedAt,
+    ];
+
+    const countResult = await db
+      .select({ count: sql<number>`count(distinct ${students.id})` })
+      .from(students)
+      .leftJoin(studentClassEnrollments, eq(students.id, studentClassEnrollments.studentId))
+      .where(eq(studentClassEnrollments.classId, classId));
+
+    const totalCount = Number(countResult[0]?.count ?? 0);
+    const totalPages = totalCount ? Math.ceil(totalCount / limitPerPage) : 0;
+
+    const studentsList = await db
+      .select(baseSelect)
+      .from(students)
+      .leftJoin(studentClassEnrollments, eq(students.id, studentClassEnrollments.studentId))
+      .where(eq(studentClassEnrollments.classId, classId))
+      .groupBy(...groupByFields)
+      .orderBy(desc(students.createdAt))
+      .limit(limitPerPage)
+      .offset(offset);
+
+    return res.status(200).json({
+      success: true,
+      data: studentsList,
+      pagination: {
+        page: currentPage,
+        limit: limitPerPage,
+        total: totalCount,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    console.error("GET /classes/:id/students error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch class students",
+    });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
