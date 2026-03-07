@@ -542,6 +542,135 @@ router.get("/:id/payments", async (req, res) => {
   }
 });
 
+router.get("/:id/siblings", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const { page = 1, limit = 10 } = req.query;
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    const currentPage = Math.max(1, parsePositiveInt(page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;
+
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(studentSiblings)
+      .where(eq(studentSiblings.studentId, studentId));
+
+    const totalCount = Number(countResult[0]?.count ?? 0);
+    const totalPages = totalCount ? Math.ceil(totalCount / limitPerPage) : 0;
+
+    const siblingRows = await db
+      .select({
+        siblingId: studentSiblings.siblingId,
+        siblingFirstName: students.firstName,
+        siblingLastName: students.lastName,
+        siblingAdmissionDate: students.admissionDate,
+      })
+      .from(studentSiblings)
+      .leftJoin(students, eq(studentSiblings.siblingId, students.id))
+      .where(eq(studentSiblings.studentId, studentId))
+      .orderBy(desc(studentSiblings.siblingId))
+      .limit(limitPerPage)
+      .offset(offset);
+
+    const siblingIds = siblingRows.map((row) => row.siblingId);
+
+    const siblingEnrollmentRows = siblingIds.length
+      ? await db
+          .select({
+            enrollment: studentClassEnrollments,
+            class: classes,
+            academicYear: academicYears,
+          })
+          .from(studentClassEnrollments)
+          .leftJoin(classes, eq(studentClassEnrollments.classId, classes.id))
+          .leftJoin(
+            academicYears,
+            eq(studentClassEnrollments.academicYearId, academicYears.id),
+          )
+          .where(inArray(studentClassEnrollments.studentId, siblingIds))
+      : [];
+
+    const currentClassBySibling = new Map<
+      number,
+      {
+        className: string;
+        academicYear: string;
+        enrollmentDate: string;
+      }
+    >();
+
+    for (const row of siblingEnrollmentRows) {
+      const siblingId = row.enrollment.studentId;
+      const existing = currentClassBySibling.get(siblingId);
+
+      const currentItem = {
+        className: row.class?.name ?? "Unassigned",
+        academicYear: row.academicYear?.year?.toString() ?? "N/A",
+        enrollmentDate: row.enrollment.enrollmentDate,
+      };
+
+      if (!existing) {
+        currentClassBySibling.set(siblingId, currentItem);
+        continue;
+      }
+
+      const existingDate = new Date(existing.enrollmentDate).getTime();
+      const currentDate = new Date(currentItem.enrollmentDate).getTime();
+
+      if (currentDate > existingDate) {
+        currentClassBySibling.set(siblingId, currentItem);
+      }
+    }
+
+    const data = siblingRows.map((row) => {
+      const currentClass = currentClassBySibling.get(row.siblingId);
+      return {
+        id: row.siblingId,
+        name: `${row.siblingFirstName ?? ""} ${row.siblingLastName ?? ""}`.trim() || "Unknown",
+        admissionDate: row.siblingAdmissionDate,
+        currentClass: currentClass
+          ? `${currentClass.className}${
+              currentClass.academicYear !== "N/A"
+                ? ` (${currentClass.academicYear})`
+                : ""
+            }`
+          : "Unassigned",
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        page: currentPage,
+        limit: limitPerPage,
+        total: totalCount,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    console.error("GET /students/:id/siblings error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch student siblings",
+    });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -680,12 +809,65 @@ router.get("/:id", async (req, res) => {
         .where(eq(studentAttendances.studentId, studentId)),
     ]);
 
+    const siblingIds = [...new Set(siblingRelations.map((relation) => relation.siblingId))];
+
+    const siblingEnrollmentRows = siblingIds.length
+      ? await db
+          .select({
+            enrollment: studentClassEnrollments,
+            class: classes,
+            academicYear: academicYears,
+          })
+          .from(studentClassEnrollments)
+          .leftJoin(classes, eq(studentClassEnrollments.classId, classes.id))
+          .leftJoin(
+            academicYears,
+            eq(studentClassEnrollments.academicYearId, academicYears.id),
+          )
+          .where(inArray(studentClassEnrollments.studentId, siblingIds))
+      : [];
+
     const studentById = new Map(siblingStudents.map((row) => [row.id, row]));
+
+    const currentClassBySibling = new Map<
+      number,
+      {
+        class: (typeof siblingEnrollmentRows)[number]["class"];
+        academicYear: (typeof siblingEnrollmentRows)[number]["academicYear"];
+        enrollmentDate: string;
+      }
+    >();
+
+    for (const row of siblingEnrollmentRows) {
+      const siblingId = row.enrollment.studentId;
+      const existing = currentClassBySibling.get(siblingId);
+
+      if (!existing) {
+        currentClassBySibling.set(siblingId, {
+          class: row.class,
+          academicYear: row.academicYear,
+          enrollmentDate: row.enrollment.enrollmentDate,
+        });
+        continue;
+      }
+
+      const existingDate = new Date(existing.enrollmentDate).getTime();
+      const currentDate = new Date(row.enrollment.enrollmentDate).getTime();
+
+      if (currentDate > existingDate) {
+        currentClassBySibling.set(siblingId, {
+          class: row.class,
+          academicYear: row.academicYear,
+          enrollmentDate: row.enrollment.enrollmentDate,
+        });
+      }
+    }
 
     const siblingRelationsWithStudents = siblingRelations.map((relation) => ({
       studentId: relation.studentId,
       siblingId: relation.siblingId,
       sibling: studentById.get(relation.siblingId) ?? null,
+      currentClass: currentClassBySibling.get(relation.siblingId) ?? null,
     }));
 
     const data = {
