@@ -54,6 +54,18 @@ router.post("/", async (req, res) => {
   try {
     const { name, address, phone, email, website, logo } = req.body;
 
+    const existing = await db
+      .select({ id: schoolDetails.id })
+      .from(schoolDetails)
+      .limit(1);
+
+    if (existing.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: "School details already exist. Please edit the existing record.",
+      });
+    }
+
     const normalizedName = typeof name === "string" ? name.trim() : "";
     const normalizedAddress = typeof address === "string" ? address.trim() : "";
     const normalizedPhone = typeof phone === "string" ? phone.trim() : "";
