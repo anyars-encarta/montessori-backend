@@ -284,6 +284,7 @@ export const studentClassEnrollments = pgTable(
     academicYearId: integer("academic_year_id")
       .notNull()
       .references(() => academicYears.id),
+    termId: integer("term_id").notNull().references(() => terms.id),
     enrollmentDate: date("enrollment_date").notNull(),
     promotionDate: date("promotion_date"), // When promoted to next class
     createdAt: timestamp("created_at").notNull().defaultNow(),

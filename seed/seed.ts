@@ -119,6 +119,7 @@ type SeedStudentClassEnrollment = {
   studentId: number;
   classId: number;
   academicYearId: number;
+  termId: number;
   enrollmentDate: string;
 };
 
@@ -275,6 +276,9 @@ const loadSeedData = async (): Promise<SeedData> => {
 
 const classKey = (name: string, level: string) => `${name}::${level}`;
 
+const termKey = (academicYearId: number, sequenceNumber: number) =>
+  `${academicYearId}::${sequenceNumber}`;
+
 const resolveAcademicYearId = (
   reference: number,
   startDate: string,
@@ -296,6 +300,39 @@ const resolveAcademicYearId = (
 
   throw new Error(
     `Could not resolve academic year reference '${reference}' for start date '${startDate}'.`,
+  );
+};
+
+const resolveTermId = (
+  reference: number,
+  seedTerms: SeedTerm[],
+  seedAcademicYears: SeedAcademicYear[],
+  academicYearIdByYear: Map<number, number>,
+  termIdByAcademicYearAndSequence: Map<string, number>,
+) => {
+  const fromIndex = seedTerms[reference - 1];
+
+  if (!fromIndex) {
+    throw new Error(`Could not resolve term reference '${reference}'.`);
+  }
+
+  const mappedAcademicYearId = resolveAcademicYearId(
+    fromIndex.academicYearId,
+    fromIndex.startDate,
+    seedAcademicYears,
+    academicYearIdByYear,
+  );
+
+  const mappedTermId = termIdByAcademicYearAndSequence.get(
+    termKey(mappedAcademicYearId, fromIndex.sequenceNumber),
+  );
+
+  if (mappedTermId) {
+    return mappedTermId;
+  }
+
+  throw new Error(
+    `Could not resolve term reference '${reference}' (name='${fromIndex.name}', sequence='${fromIndex.sequenceNumber}', academicYearRef='${fromIndex.academicYearId}').`,
   );
 };
 
@@ -405,6 +442,21 @@ const seed = async () => {
       )
       .onConflictDoNothing();
   }
+
+  const termRows = await db
+    .select({
+      id: terms.id,
+      academicYearId: terms.academicYearId,
+      sequenceNumber: terms.sequenceNumber,
+    })
+    .from(terms);
+  const termIdByAcademicYearAndSequence = new Map<string, number>();
+  termRows.forEach((row) => {
+    termIdByAcademicYearAndSequence.set(
+      termKey(row.academicYearId, row.sequenceNumber),
+      row.id,
+    );
+  });
 
   // Insert Staff
   if (data.staff.length) {
@@ -668,12 +720,14 @@ const seed = async () => {
   if (
     data.studentClassEnrollments.length &&
     studentIdByRegistration.size &&
-    classIdByKey.size
+    classIdByKey.size &&
+    termIdByAcademicYearAndSequence.size
   ) {
     const studentEnrollmentRows: Array<{
       studentId: number;
       classId: number;
       academicYearId: number;
+      termId: number;
       enrollmentDate: string;
     }> = [];
 
@@ -696,11 +750,20 @@ const seed = async () => {
         academicYearIdByYear,
       );
 
-      if (mappedStudentId && mappedClassId) {
+      const mappedTermId = resolveTermId(
+        sce.termId,
+        data.terms,
+        data.academicYears,
+        academicYearIdByYear,
+        termIdByAcademicYearAndSequence,
+      );
+
+      if (mappedStudentId && mappedClassId && mappedTermId) {
         studentEnrollmentRows.push({
           studentId: mappedStudentId,
           classId: mappedClassId,
           academicYearId: mappedAcademicYearId,
+          termId: mappedTermId,
           enrollmentDate: sce.enrollmentDate,
         });
       }
@@ -882,21 +945,12 @@ const seed = async () => {
     feeIdByName.set(row.name, row.id);
   });
 
-  const termRows = await db
-    .select({ id: terms.id, name: terms.name })
-    .from(terms);
-  const termIdByName = new Map<string, number>();
-  termRows.forEach((row) => {
-    termIdByName.set(row.name, row.id);
-  });
-
   // Insert Student Fees
   if (data.studentFees.length) {
     const studentFeeRows = data.studentFees
       .map((sf) => {
         const seedStudent = data.students[sf.studentId - 1];
         const seedFee = data.fees[sf.feeId - 1];
-        const seedTerm = data.terms[sf.termId - 1];
 
         const mappedStudentId = seedStudent
           ? studentIdByRegistration.get(seedStudent.registrationNumber)
@@ -904,9 +958,13 @@ const seed = async () => {
 
         const mappedFeeId = seedFee ? feeIdByName.get(seedFee.name) : undefined;
 
-        const mappedTermId = seedTerm
-          ? termIdByName.get(seedTerm.name)
-          : undefined;
+        const mappedTermId = resolveTermId(
+          sf.termId,
+          data.terms,
+          data.academicYears,
+          academicYearIdByYear,
+          termIdByAcademicYearAndSequence,
+        );
 
         const mappedAcademicYearId = resolveAcademicYearId(
           sf.academicYearId,
@@ -1067,7 +1125,6 @@ const seed = async () => {
       .map((ca) => {
         const seedStudent = data.students[ca.studentId - 1];
         const seedSubject = data.subjects[ca.subjectId - 1];
-        const seedTerm = data.terms[ca.termId - 1];
 
         const mappedStudentId = seedStudent
           ? studentIdByRegistration.get(seedStudent.registrationNumber)
@@ -1077,9 +1134,13 @@ const seed = async () => {
           ? subjectIdByCode.get(seedSubject.code)
           : undefined;
 
-        const mappedTermId = seedTerm
-          ? termIdByName.get(seedTerm.name)
-          : undefined;
+        const mappedTermId = resolveTermId(
+          ca.termId,
+          data.terms,
+          data.academicYears,
+          academicYearIdByYear,
+          termIdByAcademicYearAndSequence,
+        );
 
         const mappedAcademicYearId = resolveAcademicYearId(
           ca.academicYearId,
@@ -1116,7 +1177,6 @@ const seed = async () => {
       .map((p) => {
         const seedStudent = data.students[p.studentId - 1];
         const seedClass = data.classes[p.classId - 1];
-        const seedTerm = data.terms[p.termId - 1];
 
         const mappedStudentId = seedStudent
           ? studentIdByRegistration.get(seedStudent.registrationNumber)
@@ -1126,9 +1186,13 @@ const seed = async () => {
           ? classIdByKey.get(classKey(seedClass.name, seedClass.level))
           : undefined;
 
-        const mappedTermId = seedTerm
-          ? termIdByName.get(seedTerm.name)
-          : undefined;
+        const mappedTermId = resolveTermId(
+          p.termId,
+          data.terms,
+          data.academicYears,
+          academicYearIdByYear,
+          termIdByAcademicYearAndSequence,
+        );
 
         const mappedAcademicYearId = resolveAcademicYearId(
           p.academicYearId,

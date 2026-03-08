@@ -478,14 +478,14 @@
     { "studentId": 8, "parentId": 8, "relationship": "mother" }
   ],
   "studentClassEnrollments": [
-    { "studentId": 1, "classId": 1, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 2, "classId": 1, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 3, "classId": 2, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 4, "classId": 2, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 5, "classId": 3, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 6, "classId": 3, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 7, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 8, "classId": 4, "academicYearId": 1, "enrollmentDate": "2024-01-15" }
+    { "studentId": 1, "classId": 1, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 2, "classId": 1, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 3, "classId": 2, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" },
+    { "studentId": 4, "classId": 2, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" },
+    { "studentId": 5, "classId": 3, "academicYearId": 1, "termId": 3, "enrollmentDate": "2024-09-01" },
+    { "studentId": 6, "classId": 3, "academicYearId": 1, "termId": 3, "enrollmentDate": "2024-09-01" },
+    { "studentId": 7, "classId": 4, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
+    { "studentId": 8, "classId": 4, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" }
   ],
   "studentSiblings": [
     { "studentId": 1, "siblingId": 4 },

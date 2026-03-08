@@ -1,0 +1,2 @@
+ALTER TABLE "student_class_enrollments" ADD COLUMN "term_id" integer NOT NULL;--> statement-breakpoint
+ALTER TABLE "student_class_enrollments" ADD CONSTRAINT "student_class_enrollments_term_id_terms_id_fk" FOREIGN KEY ("term_id") REFERENCES "public"."terms"("id") ON DELETE no action ON UPDATE no action;
