@@ -1,6 +1,7 @@
 import express from "express";
 import academicYearsRoutes from "./routes/academicYears.js";
 import termsRoutes from "./routes/terms.js";
+import schoolDetailsRouter from "./routes/schoolDetails.js";
 import staffRoutes from "./routes/staff.js";
 import classesRoutes from "./routes/classes.js";
 import subjectsRoutes from "./routes/subjects.js";
@@ -73,6 +74,7 @@ app.use(securityMiddleware);
 app.use("/api/academic-years", academicYearsRoutes);
 app.use("/api/terms", termsRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/school-details", schoolDetailsRouter);
 app.use("/api/classes", classesRoutes);
 app.use("/api/subjects", subjectsRoutes);
 app.use("/api/students", studentsRoutes);

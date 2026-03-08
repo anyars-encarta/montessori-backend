@@ -43,6 +43,13 @@
       "when": 1772970092073,
       "tag": "0005_odd_human_robot",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1772983906188,
+      "tag": "0006_old_barracuda",
+      "breakpoints": true
     }
   ]
 }

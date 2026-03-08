@@ -476,6 +476,17 @@ export const staffAttendances = pgTable(
   })
 );
 
+export const schoolDetails = pgTable("school_details", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  address: varchar("address", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 100 }).notNull(),
+  website: varchar("website", { length: 255 }),
+  logo: varchar("logo", { length: 255 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 // ============= RELATIONS =============
 
 export const academicYearsRelations = relations(academicYears, ({ many }) => ({
