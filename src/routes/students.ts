@@ -989,6 +989,610 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/:id/parents", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const parentId = parsePositiveInt(req.body?.parentId);
+    const relationship =
+      typeof req.body?.relationship === "string" && req.body.relationship.trim()
+        ? req.body.relationship.trim()
+        : null;
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    if (parentId === null) {
+      return res.status(400).json({ success: false, error: "parentId is required" });
+    }
+
+    const [studentExists, parentExists] = await Promise.all([
+      db.select({ id: students.id }).from(students).where(eq(students.id, studentId)),
+      db.select({ id: parents.id }).from(parents).where(eq(parents.id, parentId)),
+    ]);
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    if (!parentExists.length) {
+      return res.status(404).json({ success: false, error: "Parent not found" });
+    }
+
+    const [createdRelation] = await db
+      .insert(studentParents)
+      .values({
+        studentId,
+        parentId,
+        relationship,
+      })
+      .returning();
+
+    return res.status(201).json({
+      success: true,
+      data: createdRelation,
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        error: "Parent is already linked to this student",
+      });
+    }
+
+    console.error("POST /students/:id/parents error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.delete("/:id/parents/:parentId", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const parentId = parsePositiveInt(req.params.parentId);
+
+    if (studentId === null || parentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student or parent id" });
+    }
+
+    const existingRelation = await db
+      .select({ studentId: studentParents.studentId })
+      .from(studentParents)
+      .where(and(eq(studentParents.studentId, studentId), eq(studentParents.parentId, parentId)));
+
+    if (!existingRelation.length) {
+      return res.status(404).json({ success: false, error: "Student-parent relation not found" });
+    }
+
+    await db
+      .delete(studentParents)
+      .where(and(eq(studentParents.studentId, studentId), eq(studentParents.parentId, parentId)));
+
+    return res.status(200).json({
+      success: true,
+      message: "Parent removed from student successfully",
+    });
+  } catch (error) {
+    console.error("DELETE /students/:id/parents/:parentId error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.post("/:id/siblings", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const siblingId = parsePositiveInt(req.body?.siblingId);
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    if (siblingId === null) {
+      return res.status(400).json({ success: false, error: "siblingId is required" });
+    }
+
+    if (studentId === siblingId) {
+      return res.status(400).json({ success: false, error: "Student cannot be their own sibling" });
+    }
+
+    const [studentExists, siblingExists] = await Promise.all([
+      db.select({ id: students.id }).from(students).where(eq(students.id, studentId)),
+      db.select({ id: students.id }).from(students).where(eq(students.id, siblingId)),
+    ]);
+
+    if (!studentExists.length || !siblingExists.length) {
+      return res.status(404).json({ success: false, error: "Student or sibling not found" });
+    }
+
+    const existingRelations = await db
+      .select({
+        studentId: studentSiblings.studentId,
+        siblingId: studentSiblings.siblingId,
+      })
+      .from(studentSiblings)
+      .where(
+        or(
+          and(eq(studentSiblings.studentId, studentId), eq(studentSiblings.siblingId, siblingId)),
+          and(eq(studentSiblings.studentId, siblingId), eq(studentSiblings.siblingId, studentId)),
+        )!,
+      );
+
+    const hasForward = existingRelations.some(
+      (relation) => relation.studentId === studentId && relation.siblingId === siblingId,
+    );
+    const hasReverse = existingRelations.some(
+      (relation) => relation.studentId === siblingId && relation.siblingId === studentId,
+    );
+
+    if (hasForward && hasReverse) {
+      return res.status(409).json({
+        success: false,
+        error: "Sibling relationship already exists",
+      });
+    }
+
+    if (!hasForward) {
+      await db
+        .insert(studentSiblings)
+        .values({ studentId, siblingId })
+        .onConflictDoNothing();
+    }
+
+    if (!hasReverse) {
+      await db
+        .insert(studentSiblings)
+        .values({ studentId: siblingId, siblingId: studentId })
+        .onConflictDoNothing();
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: { studentId, siblingId },
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        error: "Sibling relationship already exists",
+      });
+    }
+
+    console.error("POST /students/:id/siblings error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.delete("/:id/siblings/:siblingId", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const siblingId = parsePositiveInt(req.params.siblingId);
+
+    if (studentId === null || siblingId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student or sibling id" });
+    }
+
+    const existingRelation = await db
+      .select({ studentId: studentSiblings.studentId })
+      .from(studentSiblings)
+      .where(and(eq(studentSiblings.studentId, studentId), eq(studentSiblings.siblingId, siblingId)));
+
+    if (!existingRelation.length) {
+      return res.status(404).json({ success: false, error: "Sibling relationship not found" });
+    }
+
+    await db
+      .delete(studentSiblings)
+      .where(
+        or(
+          and(eq(studentSiblings.studentId, studentId), eq(studentSiblings.siblingId, siblingId)),
+          and(eq(studentSiblings.studentId, siblingId), eq(studentSiblings.siblingId, studentId)),
+        )!,
+      );
+
+    return res.status(200).json({
+      success: true,
+      message: "Sibling removed successfully",
+    });
+  } catch (error) {
+    console.error("DELETE /students/:id/siblings/:siblingId error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.put("/:id/health-details", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    const parseRequiredBoolean = (value: unknown, fieldName: string) => {
+      if (value === undefined || value === null || value === "") {
+        return false;
+      }
+
+      if (typeof value === "boolean") {
+        return value;
+      }
+
+      if (typeof value === "string") {
+        const lowered = value.trim().toLowerCase();
+        if (lowered === "true") return true;
+        if (lowered === "false") return false;
+      }
+
+      throw new Error(`${fieldName} must be a boolean`);
+    };
+
+    let payload: {
+      diphtheria: boolean;
+      polio: boolean;
+      whoopingCough: boolean;
+      tetanus: boolean;
+      measles: boolean;
+      tuberculosis: boolean;
+      otherConditions: string | null;
+      lastCheckupDate: string | null;
+    };
+
+    try {
+      payload = {
+        diphtheria: parseRequiredBoolean(req.body?.diphtheria, "diphtheria"),
+        polio: parseRequiredBoolean(req.body?.polio, "polio"),
+        whoopingCough: parseRequiredBoolean(req.body?.whoopingCough, "whoopingCough"),
+        tetanus: parseRequiredBoolean(req.body?.tetanus, "tetanus"),
+        measles: parseRequiredBoolean(req.body?.measles, "measles"),
+        tuberculosis: parseRequiredBoolean(req.body?.tuberculosis, "tuberculosis"),
+        otherConditions:
+          typeof req.body?.otherConditions === "string" && req.body.otherConditions.trim()
+            ? req.body.otherConditions.trim()
+            : null,
+        lastCheckupDate: parseDateInput(req.body?.lastCheckupDate),
+      };
+    } catch (parseError) {
+      return res.status(400).json({
+        success: false,
+        error:
+          parseError instanceof Error
+            ? parseError.message
+            : "Invalid health details payload",
+      });
+    }
+
+    if (
+      req.body?.lastCheckupDate !== undefined &&
+      req.body?.lastCheckupDate !== null &&
+      req.body?.lastCheckupDate !== "" &&
+      !payload.lastCheckupDate
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "lastCheckupDate must be a valid date",
+      });
+    }
+
+    const existingHealth = await db
+      .select({ id: healthDetails.id })
+      .from(healthDetails)
+      .where(eq(healthDetails.studentId, studentId));
+
+    if (existingHealth.length) {
+      const [updatedHealth] = await db
+        .update(healthDetails)
+        .set({
+          ...payload,
+          updatedAt: new Date(),
+        })
+        .where(eq(healthDetails.studentId, studentId))
+        .returning();
+
+      return res.status(200).json({ success: true, data: updatedHealth });
+    }
+
+    const [createdHealth] = await db
+      .insert(healthDetails)
+      .values({
+        studentId,
+        ...payload,
+      })
+      .returning();
+
+    return res.status(201).json({ success: true, data: createdHealth });
+  } catch (error) {
+    console.error("PUT /students/:id/health-details error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.put("/:id/other-significant-data", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const livingWith =
+      typeof req.body?.livingWith === "string" ? req.body.livingWith.trim() : "";
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const allowedValues = [
+      "both_parents",
+      "mother_only",
+      "father_only",
+      "guardian",
+      "other_person",
+    ];
+
+    if (!allowedValues.includes(livingWith)) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "livingWith must be one of: both_parents, mother_only, father_only, guardian, other_person",
+      });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    const payload = {
+      livingWith: livingWith as
+        | "both_parents"
+        | "mother_only"
+        | "father_only"
+        | "guardian"
+        | "other_person",
+      otherDetails:
+        typeof req.body?.otherDetails === "string" && req.body.otherDetails.trim()
+          ? req.body.otherDetails.trim()
+          : null,
+    };
+
+    const existingData = await db
+      .select({ id: otherSignificantData.id })
+      .from(otherSignificantData)
+      .where(eq(otherSignificantData.studentId, studentId));
+
+    if (existingData.length) {
+      const [updatedData] = await db
+        .update(otherSignificantData)
+        .set({
+          ...payload,
+          updatedAt: new Date(),
+        })
+        .where(eq(otherSignificantData.studentId, studentId))
+        .returning();
+
+      return res.status(200).json({ success: true, data: updatedData });
+    }
+
+    const [createdData] = await db
+      .insert(otherSignificantData)
+      .values({
+        studentId,
+        ...payload,
+      })
+      .returning();
+
+    return res.status(201).json({ success: true, data: createdData });
+  } catch (error) {
+    console.error("PUT /students/:id/other-significant-data error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.post("/:id/previous-schools", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const schoolName =
+      typeof req.body?.schoolName === "string" ? req.body.schoolName.trim() : "";
+    const ageAtAdmissionRaw = req.body?.ageAtAdmission;
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    if (!schoolName) {
+      return res.status(400).json({ success: false, error: "schoolName is required" });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    let ageAtAdmission: number | null = null;
+    if (ageAtAdmissionRaw !== undefined && ageAtAdmissionRaw !== null && ageAtAdmissionRaw !== "") {
+      const parsedAge = Number.parseInt(String(ageAtAdmissionRaw), 10);
+      if (Number.isNaN(parsedAge) || parsedAge < 0) {
+        return res.status(400).json({
+          success: false,
+          error: "ageAtAdmission must be a non-negative integer",
+        });
+      }
+      ageAtAdmission = parsedAge;
+    }
+
+    const dateOfAdmission = parseDateInput(req.body?.dateOfAdmission);
+    const dateLastAttended = parseDateInput(req.body?.dateLastAttended);
+
+    if (
+      req.body?.dateOfAdmission !== undefined &&
+      req.body?.dateOfAdmission !== null &&
+      req.body?.dateOfAdmission !== "" &&
+      !dateOfAdmission
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "dateOfAdmission must be a valid date",
+      });
+    }
+
+    if (
+      req.body?.dateLastAttended !== undefined &&
+      req.body?.dateLastAttended !== null &&
+      req.body?.dateLastAttended !== "" &&
+      !dateLastAttended
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "dateLastAttended must be a valid date",
+      });
+    }
+
+    const [createdSchool] = await db
+      .insert(previousSchools)
+      .values({
+        studentId,
+        schoolName,
+        dateOfAdmission,
+        ageAtAdmission,
+        dateLastAttended,
+      })
+      .returning();
+
+    return res.status(201).json({ success: true, data: createdSchool });
+  } catch (error) {
+    console.error("POST /students/:id/previous-schools error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.put("/:id/previous-schools/:schoolId", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const schoolId = parsePositiveInt(req.params.schoolId);
+    const schoolName =
+      typeof req.body?.schoolName === "string" ? req.body.schoolName.trim() : "";
+    const ageAtAdmissionRaw = req.body?.ageAtAdmission;
+
+    if (studentId === null || schoolId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student or school id" });
+    }
+
+    if (!schoolName) {
+      return res.status(400).json({ success: false, error: "schoolName is required" });
+    }
+
+    const existingSchool = await db
+      .select({ id: previousSchools.id })
+      .from(previousSchools)
+      .where(and(eq(previousSchools.id, schoolId), eq(previousSchools.studentId, studentId)));
+
+    if (!existingSchool.length) {
+      return res.status(404).json({ success: false, error: "Previous school not found" });
+    }
+
+    let ageAtAdmission: number | null = null;
+    if (ageAtAdmissionRaw !== undefined && ageAtAdmissionRaw !== null && ageAtAdmissionRaw !== "") {
+      const parsedAge = Number.parseInt(String(ageAtAdmissionRaw), 10);
+      if (Number.isNaN(parsedAge) || parsedAge < 0) {
+        return res.status(400).json({
+          success: false,
+          error: "ageAtAdmission must be a non-negative integer",
+        });
+      }
+      ageAtAdmission = parsedAge;
+    }
+
+    const dateOfAdmission = parseDateInput(req.body?.dateOfAdmission);
+    const dateLastAttended = parseDateInput(req.body?.dateLastAttended);
+
+    if (
+      req.body?.dateOfAdmission !== undefined &&
+      req.body?.dateOfAdmission !== null &&
+      req.body?.dateOfAdmission !== "" &&
+      !dateOfAdmission
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "dateOfAdmission must be a valid date",
+      });
+    }
+
+    if (
+      req.body?.dateLastAttended !== undefined &&
+      req.body?.dateLastAttended !== null &&
+      req.body?.dateLastAttended !== "" &&
+      !dateLastAttended
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "dateLastAttended must be a valid date",
+      });
+    }
+
+    const [updatedSchool] = await db
+      .update(previousSchools)
+      .set({
+        schoolName,
+        dateOfAdmission,
+        ageAtAdmission,
+        dateLastAttended,
+      })
+      .where(and(eq(previousSchools.id, schoolId), eq(previousSchools.studentId, studentId)))
+      .returning();
+
+    return res.status(200).json({ success: true, data: updatedSchool });
+  } catch (error) {
+    console.error("PUT /students/:id/previous-schools/:schoolId error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.delete("/:id/previous-schools/:schoolId", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const schoolId = parsePositiveInt(req.params.schoolId);
+
+    if (studentId === null || schoolId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student or school id" });
+    }
+
+    const existingSchool = await db
+      .select({ id: previousSchools.id })
+      .from(previousSchools)
+      .where(and(eq(previousSchools.id, schoolId), eq(previousSchools.studentId, studentId)));
+
+    if (!existingSchool.length) {
+      return res.status(404).json({ success: false, error: "Previous school not found" });
+    }
+
+    await db
+      .delete(previousSchools)
+      .where(and(eq(previousSchools.id, schoolId), eq(previousSchools.studentId, studentId)));
+
+    return res.status(200).json({
+      success: true,
+      message: "Previous school deleted successfully",
+    });
+  } catch (error) {
+    console.error("DELETE /students/:id/previous-schools/:schoolId error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
