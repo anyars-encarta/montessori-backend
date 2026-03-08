@@ -622,6 +622,83 @@ router.get("/:id/enrollments", async (req, res) => {
   }
 });
 
+router.get("/:id/fees", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const { page = 1, limit = 10 } = req.query; // Add limit and page query parameters
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+    const currentPage = Math.max(1, parsePositiveInt(page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;  
+
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(studentFees)
+      .where(eq(studentFees.studentId, studentId));
+
+    const totalCount = Number(countResult[0]?.count ?? 0);
+    const totalPages = totalCount ? Math.ceil(totalCount / limitPerPage) : 0;
+
+    const rows = await db
+      .select({
+        id: studentFees.id,
+        feeName: fees.name,
+        amount: studentFees.amount,
+        dueDate: studentFees.dueDate,
+        status: studentFees.status,
+        academicYear: academicYears.year,
+        term: terms.name,
+      })
+      .from(studentFees)
+      .leftJoin(fees, eq(studentFees.feeId, fees.id))
+      .leftJoin(academicYears, eq(studentFees.academicYearId, academicYears.id))
+      .leftJoin(terms, eq(studentFees.termId, terms.id))
+      .where(eq(studentFees.studentId, studentId))
+      .orderBy(desc(studentFees.createdAt))
+      .limit(limitPerPage)
+      .offset(offset);
+
+    const data = rows.map((row) => ({
+      id: row.id,
+      feeName: row.feeName ?? "N/A",
+      amount: row.amount,
+      dueDate: row.dueDate,
+      status: row.status ?? "N/A",
+      academicYear: row.academicYear ?? "N/A",
+      term: row.term ?? "N/A",
+    }));
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        page: currentPage,
+        limit: limitPerPage,
+        total: totalCount,
+        totalPages,
+      },
+    });
+  } catch (error) {
+    console.error("GET /students/:id/fees error:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Failed to fetch student fees",
+    });
+  }
+});
+
 router.get("/:id/payments", async (req, res) => {
   try {
     const studentId = parsePositiveInt(req.params.id);
