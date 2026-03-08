@@ -33,6 +33,163 @@ const parsePositiveInt = (value: unknown) => {
   return parsed;
 };
 
+const parseDateInput = (value: unknown) => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  if (!trimmed) {
+    return null;
+  }
+
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString().slice(0, 10);
+};
+
+const parseOptionalBoolean = (value: unknown) => {
+  if (value === undefined || value === null || value === "") {
+    return undefined;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const lowered = value.trim().toLowerCase();
+    if (lowered === "true") {
+      return true;
+    }
+    if (lowered === "false") {
+      return false;
+    }
+  }
+
+  return null;
+};
+
+router.post("/", async (req, res) => {
+  try {
+    const {
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      admissionDate,
+      cloudinaryImageUrl,
+      imageCldPubId,
+      registrationNumber,
+      isActive,
+    } = req.body;
+
+    const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
+    const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
+    const normalizedGender = typeof gender === "string" ? gender.trim().toLowerCase() : "";
+    const normalizedAdmissionDate = parseDateInput(admissionDate);
+    const normalizedDateOfBirth = parseDateInput(dateOfBirth);
+    const normalizedIsActive = parseOptionalBoolean(isActive);
+
+    const normalizedCloudinaryImageUrl =
+      typeof cloudinaryImageUrl === "string" && cloudinaryImageUrl.trim()
+        ? cloudinaryImageUrl.trim()
+        : null;
+
+    const normalizedImageCldPubId =
+      typeof imageCldPubId === "string" && imageCldPubId.trim()
+        ? imageCldPubId.trim()
+        : null;
+
+    const normalizedRegistrationNumber =
+      typeof registrationNumber === "string" && registrationNumber.trim()
+        ? registrationNumber.trim()
+        : null;
+
+    if (!trimmedFirstName) {
+      return res.status(400).json({ success: false, error: "firstName is required" });
+    }
+
+    if (!trimmedLastName) {
+      return res.status(400).json({ success: false, error: "lastName is required" });
+    }
+
+    if (!normalizedAdmissionDate) {
+      return res.status(400).json({
+        success: false,
+        error: "admissionDate is required and must be a valid date",
+      });
+    }
+
+    if (dateOfBirth !== undefined && dateOfBirth !== null && !normalizedDateOfBirth) {
+      return res.status(400).json({
+        success: false,
+        error: "dateOfBirth must be a valid date",
+      });
+    }
+
+    if (!["male", "female", "other"].includes(normalizedGender)) {
+      return res.status(400).json({
+        success: false,
+        error: "gender must be one of: male, female, other",
+      });
+    }
+
+    if (normalizedIsActive === null) {
+      return res.status(400).json({
+        success: false,
+        error: "isActive must be a boolean",
+      });
+    }
+
+    const [createdStudent] = await db
+      .insert(students)
+      .values({
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        dateOfBirth: normalizedDateOfBirth,
+        gender: normalizedGender as "male" | "female" | "other",
+        admissionDate: normalizedAdmissionDate,
+        cloudinaryImageUrl: normalizedCloudinaryImageUrl,
+        imageCldPubId: normalizedImageCldPubId,
+        registrationNumber: normalizedRegistrationNumber,
+        ...(normalizedIsActive !== undefined ? { isActive: normalizedIsActive } : {}),
+      })
+      .returning();
+
+    if (!createdStudent) {
+      return res.status(400).json({
+        success: false,
+        error: "Failed to create student",
+      });
+    }
+
+    return res.status(201).json({
+      success: true,
+      data: createdStudent,
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        error: "A student with this registration number already exists",
+      });
+    }
+
+    console.error("POST /students error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.get("/", async (req, res) => {
   try {
     const {
@@ -668,6 +825,167 @@ router.get("/:id/siblings", async (req, res) => {
       success: false,
       error: "Failed to fetch student siblings",
     });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const studentId = Number.parseInt(req.params.id, 10);
+
+    if (!Number.isFinite(studentId) || studentId <= 0) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const {
+      firstName,
+      lastName,
+      dateOfBirth,
+      gender,
+      admissionDate,
+      cloudinaryImageUrl,
+      imageCldPubId,
+      registrationNumber,
+      isActive,
+    } = req.body;
+
+    const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
+    const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
+    const normalizedGender = typeof gender === "string" ? gender.trim().toLowerCase() : "";
+    const normalizedAdmissionDate = parseDateInput(admissionDate);
+    const normalizedDateOfBirth = parseDateInput(dateOfBirth);
+    const normalizedIsActive = parseOptionalBoolean(isActive);
+
+    const normalizedCloudinaryImageUrl =
+      typeof cloudinaryImageUrl === "string" && cloudinaryImageUrl.trim()
+        ? cloudinaryImageUrl.trim()
+        : null;
+
+    const normalizedImageCldPubId =
+      typeof imageCldPubId === "string" && imageCldPubId.trim()
+        ? imageCldPubId.trim()
+        : null;
+
+    const normalizedRegistrationNumber =
+      typeof registrationNumber === "string" && registrationNumber.trim()
+        ? registrationNumber.trim()
+        : null;
+
+    if (!trimmedFirstName) {
+      return res.status(400).json({ success: false, error: "firstName is required" });
+    }
+
+    if (!trimmedLastName) {
+      return res.status(400).json({ success: false, error: "lastName is required" });
+    }
+
+    if (!normalizedAdmissionDate) {
+      return res.status(400).json({
+        success: false,
+        error: "admissionDate is required and must be a valid date",
+      });
+    }
+
+    if (dateOfBirth !== undefined && dateOfBirth !== null && !normalizedDateOfBirth) {
+      return res.status(400).json({
+        success: false,
+        error: "dateOfBirth must be a valid date",
+      });
+    }
+
+    if (!["male", "female", "other"].includes(normalizedGender)) {
+      return res.status(400).json({
+        success: false,
+        error: "gender must be one of: male, female, other",
+      });
+    }
+
+    if (normalizedIsActive === null) {
+      return res.status(400).json({
+        success: false,
+        error: "isActive must be a boolean",
+      });
+    }
+
+    const existingStudent = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!existingStudent.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    const [updatedStudent] = await db
+      .update(students)
+      .set({
+        firstName: trimmedFirstName,
+        lastName: trimmedLastName,
+        dateOfBirth: normalizedDateOfBirth,
+        gender: normalizedGender as "male" | "female" | "other",
+        admissionDate: normalizedAdmissionDate,
+        cloudinaryImageUrl: normalizedCloudinaryImageUrl,
+        imageCldPubId: normalizedImageCldPubId,
+        registrationNumber: normalizedRegistrationNumber,
+        ...(normalizedIsActive !== undefined ? { isActive: normalizedIsActive } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(students.id, studentId))
+      .returning();
+
+    return res.status(200).json({
+      success: true,
+      data: updatedStudent,
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        error: "A student with this registration number already exists",
+      });
+    }
+
+    console.error("PUT /students/:id error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const studentId = Number.parseInt(req.params.id, 10);
+
+    if (!Number.isFinite(studentId) || studentId <= 0) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    const existingStudent = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!existingStudent.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    await db.delete(students).where(eq(students.id, studentId));
+
+    return res.status(200).json({
+      success: true,
+      message: "Student deleted successfully",
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23503") {
+      return res.status(409).json({
+        success: false,
+        error: "Cannot delete student because related records exist",
+      });
+    }
+
+    console.error("DELETE /students/:id error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
 
