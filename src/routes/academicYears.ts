@@ -5,6 +5,61 @@ import { eq } from "drizzle-orm";
 
 const router = express.Router();
 
+const normalizeDateInput = (rawValue: unknown): string | null => {
+  if (typeof rawValue !== "string") return null;
+
+  const value = rawValue.trim();
+  if (!value) return null;
+
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const yearText = isoMatch[1];
+    const monthText = isoMatch[2];
+    const dayText = isoMatch[3];
+
+    if (!yearText || !monthText || !dayText) return null;
+
+    const year = Number.parseInt(yearText, 10);
+    const month = Number.parseInt(monthText, 10);
+    const day = Number.parseInt(dayText, 10);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    ) {
+      return `${yearText}-${monthText}-${dayText}`;
+    }
+
+    return null;
+  }
+
+  const slashMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!slashMatch) return null;
+
+  const dayText = slashMatch[1];
+  const monthText = slashMatch[2];
+  const yearText = slashMatch[3];
+
+  if (!yearText || !monthText || !dayText) return null;
+
+  const year = Number.parseInt(yearText, 10);
+  const month = Number.parseInt(monthText, 10);
+  const day = Number.parseInt(dayText, 10);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${yearText}-${monthText}-${dayText}`;
+};
+
 router.get("/", async (req, res) => {
   try {
     const data = await db.select().from(academicYears);
@@ -52,8 +107,8 @@ router.post("/", async (req, res) => {
     const { year, startDate, endDate } = req.body;
 
     const parsedYear = Number.parseInt(String(year), 10);
-    const normalizedStartDate = typeof startDate === "string" ? startDate.trim() : "";
-    const normalizedEndDate = typeof endDate === "string" ? endDate.trim() : "";
+    const normalizedStartDate = normalizeDateInput(startDate);
+    const normalizedEndDate = normalizeDateInput(endDate);
 
     if (!Number.isFinite(parsedYear)) {
       return res.status(400).json({ success: false, error: "year must be a number" });
@@ -62,10 +117,19 @@ router.post("/", async (req, res) => {
     if (!normalizedStartDate || !normalizedEndDate) {
       return res.status(400).json({
         success: false,
-        error: "startDate and endDate are required",
+        error: "startDate and endDate are required and must be valid dates (YYYY-MM-DD or DD/MM/YYYY)",
       });
     }
 
+    if (normalizedStartDate > normalizedEndDate) {
+      return res.status(400).json({
+        success: false,
+        error: "startDate cannot be after endDate",
+      });
+    }
+
+    console.log("Creating academic year with:", { year: parsedYear, startDate: normalizedStartDate, endDate: normalizedEndDate });
+    
     const [created] = await db
       .insert(academicYears)
       .values({
@@ -96,8 +160,8 @@ router.put("/:id", async (req, res) => {
     }
 
     const parsedYear = Number.parseInt(String(year), 10);
-    const normalizedStartDate = typeof startDate === "string" ? startDate.trim() : "";
-    const normalizedEndDate = typeof endDate === "string" ? endDate.trim() : "";
+    const normalizedStartDate = normalizeDateInput(startDate);
+    const normalizedEndDate = normalizeDateInput(endDate);
 
     if (!Number.isFinite(parsedYear)) {
       return res.status(400).json({ success: false, error: "year must be a number" });
@@ -106,7 +170,14 @@ router.put("/:id", async (req, res) => {
     if (!normalizedStartDate || !normalizedEndDate) {
       return res.status(400).json({
         success: false,
-        error: "startDate and endDate are required",
+        error: "startDate and endDate are required and must be valid dates (YYYY-MM-DD or DD/MM/YYYY)",
+      });
+    }
+
+    if (normalizedStartDate > normalizedEndDate) {
+      return res.status(400).json({
+        success: false,
+        error: "startDate cannot be after endDate",
       });
     }
 
