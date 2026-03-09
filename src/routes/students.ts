@@ -579,6 +579,7 @@ router.get("/:id/enrollments", async (req, res) => {
         id: studentClassEnrollments.id,
         className: classes.name,
         academicYear: academicYears.year,
+        term: terms.name,
         supervisorFirstName: staff.firstName,
         supervisorLastName: staff.lastName,
         enrollmentDate: studentClassEnrollments.enrollmentDate,
@@ -586,6 +587,7 @@ router.get("/:id/enrollments", async (req, res) => {
       .from(studentClassEnrollments)
       .leftJoin(classes, eq(studentClassEnrollments.classId, classes.id))
       .leftJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
+      .leftJoin(terms, eq(studentClassEnrollments.termId, terms.id))
       .leftJoin(staff, eq(classes.supervisorId, staff.id))
       .where(eq(studentClassEnrollments.studentId, studentId))
       .orderBy(desc(studentClassEnrollments.createdAt))
@@ -596,6 +598,7 @@ router.get("/:id/enrollments", async (req, res) => {
       id: row.id,
       className: row.className ?? "Unassigned",
       academicYear: row.academicYear?.toString() ?? "N/A",
+      term: row.term ?? "N/A",
       supervisor:
         row.supervisorFirstName && row.supervisorLastName
           ? `${row.supervisorFirstName} ${row.supervisorLastName}`

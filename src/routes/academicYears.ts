@@ -128,8 +128,6 @@ router.post("/", async (req, res) => {
       });
     }
 
-    console.log("Creating academic year with:", { year: parsedYear, startDate: normalizedStartDate, endDate: normalizedEndDate });
-    
     const [created] = await db
       .insert(academicYears)
       .values({
