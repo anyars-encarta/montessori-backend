@@ -243,6 +243,7 @@ const runEnrollmentWorkflow = async (
         homeWork2: "0",
         exercise1: "0",
         exercise2: "0",
+        classTest: "0",
         classMark: "0",
         examMark: "0",
         totalMark: "0",
@@ -357,7 +358,9 @@ router.get("/overview", async (req, res) => {
             homeWork2: continuousAssessments.homeWork2,
             exercise1: continuousAssessments.exercise1,
             exercise2: continuousAssessments.exercise2,
-            classTest: continuousAssessments.classMark,
+            classTest: continuousAssessments.classTest,
+            classMark: continuousAssessments.classMark,
+            examMark: continuousAssessments.examMark,
             totalMark: continuousAssessments.totalMark,
           })
           .from(continuousAssessments)

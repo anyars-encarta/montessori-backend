@@ -57,6 +57,13 @@
       "when": 1773062665269,
       "tag": "0007_nifty_tempest",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773146400000,
+      "tag": "0008_wide_spiral",
+      "breakpoints": true
     }
   ]
 }

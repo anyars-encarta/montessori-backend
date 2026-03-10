@@ -80,18 +80,20 @@ router.put("/:id", async (req, res) => {
     const exercise1 = parseScoreInput(req.body?.exercise1);
     const exercise2 = parseScoreInput(req.body?.exercise2);
     const classTest = parseScoreInput(req.body?.classTest);
+    const examMark = parseScoreInput(req.body?.examMark);
 
     if (
       homeWork1 === null ||
       homeWork2 === null ||
       exercise1 === null ||
       exercise2 === null ||
-      classTest === null
+      classTest === null ||
+      examMark === null
     ) {
       return res.status(400).json({
         success: false,
         error:
-          "homeWork1, homeWork2, exercise1, exercise2 and classTest must be valid positive numbers",
+          "homeWork1, homeWork2, exercise1, exercise2, classTest and examMark must be valid positive numbers",
       });
     }
 
@@ -107,7 +109,11 @@ router.put("/:id", async (req, res) => {
       });
     }
 
-    const totalMark = homeWork1 + homeWork2 + exercise1 + exercise2 + classTest;
+    const classMarkRaw =
+      homeWork1 + homeWork2 + exercise1 + exercise2 + classTest;
+    const classMark = (classMarkRaw * 30) / 100;
+    const weightedExamMark = (examMark * 70) / 100;
+    const totalMark = classMark + weightedExamMark;
 
     const [updated] = await db
       .update(continuousAssessments)
@@ -116,8 +122,9 @@ router.put("/:id", async (req, res) => {
         homeWork2: homeWork2.toFixed(2),
         exercise1: exercise1.toFixed(2),
         exercise2: exercise2.toFixed(2),
-        classMark: classTest.toFixed(2),
-        examMark: "0.00",
+        classTest: classTest.toFixed(2),
+        classMark: classMark.toFixed(2),
+        examMark: examMark.toFixed(2),
         totalMark: totalMark.toFixed(2),
         updatedAt: new Date(),
       })

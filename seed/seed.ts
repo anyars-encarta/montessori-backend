@@ -226,6 +226,7 @@ type SeedContinuousAssessment = {
   homeWork2: string;
   exercise1: string;
   exercise2: string;
+  classTest: string;
   classMark: string;
   examMark: string;
   totalMark: string;
@@ -1164,6 +1165,7 @@ const seed = async () => {
           homeWork2: ca.homeWork2,
           exercise1: ca.exercise1,
           exercise2: ca.exercise2,
+          classTest: ca.classTest,
           classMark: ca.classMark,
           examMark: ca.examMark,
           totalMark: ca.totalMark,

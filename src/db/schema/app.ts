@@ -313,6 +313,7 @@ export const continuousAssessments = pgTable("continuous_assessments", {
   homeWork2: numeric("home_work_2", { precision: 5, scale: 2 }).notNull(),
   exercise1: numeric("exercise_1", { precision: 5, scale: 2 }).notNull(),
   exercise2: numeric("exercise_2", { precision: 5, scale: 2 }).notNull(),
+  classTest: numeric("class_test", { precision: 5, scale: 2 }).notNull().default("0"),
   classMark: numeric("class_mark", { precision: 5, scale: 2 }).notNull(),
   examMark: numeric("exam_mark", { precision: 5, scale: 2 }).notNull(),
   totalMark: numeric("total_mark", { precision: 5, scale: 2 }).notNull(),
