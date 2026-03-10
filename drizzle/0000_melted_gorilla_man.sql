@@ -1,5 +1,6 @@
 CREATE TYPE "public"."attendance_status" AS ENUM('present', 'absent');--> statement-breakpoint
 CREATE TYPE "public"."fee_type" AS ENUM('admission', 'promotion', 'tuition', 'other');--> statement-breakpoint
+CREATE TYPE "public"."gender" AS ENUM('male', 'female', 'other');--> statement-breakpoint
 CREATE TYPE "public"."living_with" AS ENUM('both_parents', 'mother_only', 'father_only', 'guardian', 'other_person');--> statement-breakpoint
 CREATE TYPE "public"."payment_status" AS ENUM('pending', 'partial', 'paid');--> statement-breakpoint
 CREATE TYPE "public"."staff_type" AS ENUM('teacher', 'non_teaching');--> statement-breakpoint
@@ -23,7 +24,9 @@ CREATE TABLE "classes" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" varchar(100) NOT NULL,
 	"level" varchar(50) NOT NULL,
+	"capacity" integer DEFAULT 0 NOT NULL,
 	"supervisor_id" integer NOT NULL,
+	"subject_ids" integer[] DEFAULT '{}' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -34,9 +37,16 @@ CREATE TABLE "continuous_assessments" (
 	"subject_id" integer NOT NULL,
 	"academic_year_id" integer NOT NULL,
 	"term_id" integer NOT NULL,
+	"home_work_1" numeric(5, 2) NOT NULL,
+	"home_work_2" numeric(5, 2) NOT NULL,
+	"exercise_1" numeric(5, 2) NOT NULL,
+	"exercise_2" numeric(5, 2) NOT NULL,
+	"class_test" numeric(5, 2) DEFAULT '0' NOT NULL,
 	"class_mark" numeric(5, 2) NOT NULL,
 	"exam_mark" numeric(5, 2) NOT NULL,
 	"total_mark" numeric(5, 2) NOT NULL,
+	"subject_position" integer,
+	"remarks" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -146,6 +156,18 @@ CREATE TABLE "previous_schools" (
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE "school_details" (
+	"id" serial PRIMARY KEY NOT NULL,
+	"name" varchar(100) NOT NULL,
+	"address" varchar(255) NOT NULL,
+	"phone" varchar(20) NOT NULL,
+	"email" varchar(100) NOT NULL,
+	"website" varchar(255),
+	"logo" varchar(255),
+	"created_at" timestamp DEFAULT now() NOT NULL,
+	"updated_at" timestamp DEFAULT now() NOT NULL
+);
+--> statement-breakpoint
 CREATE TABLE "staff" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"first_name" varchar(100) NOT NULL,
@@ -153,13 +175,17 @@ CREATE TABLE "staff" (
 	"email" varchar(255),
 	"phone" varchar(20),
 	"date_of_birth" date,
+	"gender" "gender" NOT NULL,
 	"staff_type" "staff_type" NOT NULL,
 	"cloudinary_image_url" text,
+	"image_cld_pub_id" varchar(255),
 	"hire_date" date NOT NULL,
+	"registration_number" varchar(50),
 	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
-	CONSTRAINT "staff_email_unique" UNIQUE("email")
+	CONSTRAINT "staff_email_unique" UNIQUE("email"),
+	CONSTRAINT "staff_registration_number_unique" UNIQUE("registration_number")
 );
 --> statement-breakpoint
 CREATE TABLE "staff_attendances" (
@@ -189,8 +215,11 @@ CREATE TABLE "student_class_enrollments" (
 	"student_id" integer NOT NULL,
 	"class_id" integer NOT NULL,
 	"academic_year_id" integer NOT NULL,
+	"term_id" integer NOT NULL,
 	"enrollment_date" date NOT NULL,
 	"promotion_date" date,
+	"class_position" integer,
+	"remarks" text,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -226,9 +255,12 @@ CREATE TABLE "students" (
 	"first_name" varchar(100) NOT NULL,
 	"last_name" varchar(100) NOT NULL,
 	"date_of_birth" date,
+	"gender" "gender" NOT NULL,
 	"admission_date" date NOT NULL,
 	"cloudinary_image_url" text,
+	"image_cld_pub_id" varchar(255),
 	"registration_number" varchar(50),
+	"is_active" boolean DEFAULT true NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "students_registration_number_unique" UNIQUE("registration_number")
@@ -240,6 +272,7 @@ CREATE TABLE "subjects" (
 	"code" varchar(20),
 	"description" text,
 	"cloudinary_image_url" text,
+	"image_cld_pub_id" varchar(255),
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "subjects_code_unique" UNIQUE("code")
@@ -332,6 +365,7 @@ ALTER TABLE "student_attendances" ADD CONSTRAINT "student_attendances_student_id
 ALTER TABLE "student_class_enrollments" ADD CONSTRAINT "student_class_enrollments_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "student_class_enrollments" ADD CONSTRAINT "student_class_enrollments_class_id_classes_id_fk" FOREIGN KEY ("class_id") REFERENCES "public"."classes"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "student_class_enrollments" ADD CONSTRAINT "student_class_enrollments_academic_year_id_academic_years_id_fk" FOREIGN KEY ("academic_year_id") REFERENCES "public"."academic_years"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "student_class_enrollments" ADD CONSTRAINT "student_class_enrollments_term_id_terms_id_fk" FOREIGN KEY ("term_id") REFERENCES "public"."terms"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_fee_id_fees_id_fk" FOREIGN KEY ("fee_id") REFERENCES "public"."fees"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "student_fees" ADD CONSTRAINT "student_fees_academic_year_id_academic_years_id_fk" FOREIGN KEY ("academic_year_id") REFERENCES "public"."academic_years"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint

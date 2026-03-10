@@ -5,64 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1772115048249,
-      "tag": "0000_fancy_mephisto",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1772278133773,
-      "tag": "0001_high_lockheed",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1772362317974,
-      "tag": "0002_yellow_vulture",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1772363658683,
-      "tag": "0003_fearless_alice",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1772816842516,
-      "tag": "0004_even_war_machine",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1772970092073,
-      "tag": "0005_odd_human_robot",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1772983906188,
-      "tag": "0006_old_barracuda",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1773062665269,
-      "tag": "0007_nifty_tempest",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1773146400000,
-      "tag": "0008_wide_spiral",
+      "when": 1773145158568,
+      "tag": "0000_melted_gorilla_man",
       "breakpoints": true
     }
   ]

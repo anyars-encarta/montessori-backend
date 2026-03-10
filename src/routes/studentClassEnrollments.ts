@@ -338,6 +338,8 @@ router.get("/overview", async (req, res) => {
         termName: terms.name,
         termSequenceNumber: terms.sequenceNumber,
         enrollmentDate: studentClassEnrollments.enrollmentDate,
+        classPosition: studentClassEnrollments.classPosition,
+        remarks: studentClassEnrollments.remarks,
       })
       .from(studentClassEnrollments)
       .innerJoin(students, eq(studentClassEnrollments.studentId, students.id))
@@ -362,6 +364,8 @@ router.get("/overview", async (req, res) => {
             classMark: continuousAssessments.classMark,
             examMark: continuousAssessments.examMark,
             totalMark: continuousAssessments.totalMark,
+            subjectPosition: continuousAssessments.subjectPosition,
+            remarks: continuousAssessments.remarks,
           })
           .from(continuousAssessments)
           .innerJoin(subjects, eq(continuousAssessments.subjectId, subjects.id))
@@ -396,6 +400,8 @@ router.get("/overview", async (req, res) => {
             sequenceNumber: row.termSequenceNumber,
           },
           enrollmentDate: row.enrollmentDate,
+          classPosition: row.classPosition,
+          remarks: row.remarks,
           assessments: assessmentRows,
         };
       }),

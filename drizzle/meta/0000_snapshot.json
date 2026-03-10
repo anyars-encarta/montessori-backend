@@ -1,5 +1,5 @@
 {
-  "id": "b5b427f3-db64-46f7-8747-538be4cf0ed6",
+  "id": "227da2ae-2984-421d-98b6-b4ce69928b41",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -138,11 +138,25 @@
           "primaryKey": false,
           "notNull": true
         },
+        "capacity": {
+          "name": "capacity",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
         "supervisor_id": {
           "name": "supervisor_id",
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "subject_ids": {
+          "name": "subject_ids",
+          "type": "integer[]",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'"
         },
         "created_at": {
           "name": "created_at",
@@ -215,6 +229,37 @@
           "primaryKey": false,
           "notNull": true
         },
+        "home_work_1": {
+          "name": "home_work_1",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "home_work_2": {
+          "name": "home_work_2",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exercise_1": {
+          "name": "exercise_1",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "exercise_2": {
+          "name": "exercise_2",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "class_test": {
+          "name": "class_test",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
         "class_mark": {
           "name": "class_mark",
           "type": "numeric(5, 2)",
@@ -232,6 +277,18 @@
           "type": "numeric(5, 2)",
           "primaryKey": false,
           "notNull": true
+        },
+        "subject_position": {
+          "name": "subject_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "remarks": {
+          "name": "remarks",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1113,6 +1170,75 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.school_details": {
+      "name": "school_details",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "address": {
+          "name": "address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phone": {
+          "name": "phone",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "website": {
+          "name": "website",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "logo": {
+          "name": "logo",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.staff": {
       "name": "staff",
       "schema": "",
@@ -1153,6 +1279,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
         "staff_type": {
           "name": "staff_type",
           "type": "staff_type",
@@ -1166,11 +1299,23 @@
           "primaryKey": false,
           "notNull": false
         },
+        "image_cld_pub_id": {
+          "name": "image_cld_pub_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "hire_date": {
           "name": "hire_date",
           "type": "date",
           "primaryKey": false,
           "notNull": true
+        },
+        "registration_number": {
+          "name": "registration_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
         },
         "is_active": {
           "name": "is_active",
@@ -1203,6 +1348,13 @@
           "nullsNotDistinct": false,
           "columns": [
             "email"
+          ]
+        },
+        "staff_registration_number_unique": {
+          "name": "staff_registration_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "registration_number"
           ]
         }
       },
@@ -1458,6 +1610,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "term_id": {
+          "name": "term_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
         "enrollment_date": {
           "name": "enrollment_date",
           "type": "date",
@@ -1467,6 +1625,18 @@
         "promotion_date": {
           "name": "promotion_date",
           "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "class_position": {
+          "name": "class_position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "remarks": {
+          "name": "remarks",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1534,6 +1704,19 @@
           "tableTo": "academic_years",
           "columnsFrom": [
             "academic_year_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "student_class_enrollments_term_id_terms_id_fk": {
+          "name": "student_class_enrollments_term_id_terms_id_fk",
+          "tableFrom": "student_class_enrollments",
+          "tableTo": "terms",
+          "columnsFrom": [
+            "term_id"
           ],
           "columnsTo": [
             "id"
@@ -1839,6 +2022,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "gender": {
+          "name": "gender",
+          "type": "gender",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
         "admission_date": {
           "name": "admission_date",
           "type": "date",
@@ -1851,11 +2041,24 @@
           "primaryKey": false,
           "notNull": false
         },
+        "image_cld_pub_id": {
+          "name": "image_cld_pub_id",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
         "registration_number": {
           "name": "registration_number",
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
+        },
+        "is_active": {
+          "name": "is_active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
         },
         "created_at": {
           "name": "created_at",
@@ -1919,6 +2122,12 @@
         "cloudinary_image_url": {
           "name": "cloudinary_image_url",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "image_cld_pub_id": {
+          "name": "image_cld_pub_id",
+          "type": "varchar(255)",
           "primaryKey": false,
           "notNull": false
         },
@@ -2451,6 +2660,15 @@
         "admission",
         "promotion",
         "tuition",
+        "other"
+      ]
+    },
+    "public.gender": {
+      "name": "gender",
+      "schema": "public",
+      "values": [
+        "male",
+        "female",
         "other"
       ]
     },

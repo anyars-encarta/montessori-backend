@@ -287,6 +287,8 @@ export const studentClassEnrollments = pgTable(
     termId: integer("term_id").notNull().references(() => terms.id),
     enrollmentDate: date("enrollment_date").notNull(),
     promotionDate: date("promotion_date"), // When promoted to next class
+    classPosition: integer("class_position"), // Position in the class for the term
+    remarks: text("remarks"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
@@ -317,6 +319,8 @@ export const continuousAssessments = pgTable("continuous_assessments", {
   classMark: numeric("class_mark", { precision: 5, scale: 2 }).notNull(),
   examMark: numeric("exam_mark", { precision: 5, scale: 2 }).notNull(),
   totalMark: numeric("total_mark", { precision: 5, scale: 2 }).notNull(),
+  subjectPosition: integer("subject_position"), // Position in the subject for the term
+  remarks: text("remarks"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

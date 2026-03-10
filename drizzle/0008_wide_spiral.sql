@@ -1,1 +1,0 @@
-ALTER TABLE "continuous_assessments" ADD COLUMN "class_test" numeric(5, 2) DEFAULT '0' NOT NULL;

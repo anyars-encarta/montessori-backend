@@ -121,6 +121,8 @@ type SeedStudentClassEnrollment = {
   academicYearId: number;
   termId: number;
   enrollmentDate: string;
+  classPosition: number | null;
+  remarks: string | null;
 };
 
 type SeedStudentSibling = {
@@ -230,6 +232,8 @@ type SeedContinuousAssessment = {
   classMark: string;
   examMark: string;
   totalMark: string;
+  subjectPosition: number | null;
+  remarks: string | null;
 };
 
 type SeedPosition = {
@@ -734,6 +738,8 @@ const seed = async () => {
       academicYearId: number;
       termId: number;
       enrollmentDate: string;
+      classPosition: number | null;
+      remarks: string | null;
     }> = [];
 
     data.studentClassEnrollments.forEach((sce) => {
@@ -770,6 +776,8 @@ const seed = async () => {
           academicYearId: mappedAcademicYearId,
           termId: mappedTermId,
           enrollmentDate: sce.enrollmentDate,
+          classPosition: sce.classPosition,
+          remarks: sce.remarks,
         });
       }
     });
@@ -1169,6 +1177,8 @@ const seed = async () => {
           classMark: ca.classMark,
           examMark: ca.examMark,
           totalMark: ca.totalMark,
+          subjectPosition: ca.subjectPosition,
+          remarks: ca.remarks,
         };
       })
       .filter((row) => row !== null) as Array<any>;

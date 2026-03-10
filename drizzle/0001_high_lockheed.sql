@@ -1,1 +1,0 @@
-ALTER TABLE "classes" ADD COLUMN "capacity" integer NOT NULL;

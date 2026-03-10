@@ -478,14 +478,78 @@
     { "studentId": 8, "parentId": 8, "relationship": "mother" }
   ],
   "studentClassEnrollments": [
-    { "studentId": 1, "classId": 1, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 2, "classId": 1, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 3, "classId": 2, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" },
-    { "studentId": 4, "classId": 2, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" },
-    { "studentId": 5, "classId": 3, "academicYearId": 1, "termId": 3, "enrollmentDate": "2024-09-01" },
-    { "studentId": 6, "classId": 3, "academicYearId": 1, "termId": 3, "enrollmentDate": "2024-09-01" },
-    { "studentId": 7, "classId": 4, "academicYearId": 1, "termId": 1, "enrollmentDate": "2024-01-15" },
-    { "studentId": 8, "classId": 4, "academicYearId": 1, "termId": 2, "enrollmentDate": "2024-05-01" }
+    {
+      "studentId": 1,
+      "classId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "enrollmentDate": "2024-01-15",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 2,
+      "classId": 1,
+      "academicYearId": 1,
+      "termId": 1,
+      "enrollmentDate": "2024-01-15",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 3,
+      "classId": 2,
+      "academicYearId": 1,
+      "termId": 2,
+      "enrollmentDate": "2024-05-01",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 4,
+      "classId": 2,
+      "academicYearId": 1,
+      "termId": 2,
+      "enrollmentDate": "2024-05-01",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 5,
+      "classId": 3,
+      "academicYearId": 1,
+      "termId": 3,
+      "enrollmentDate": "2024-09-01",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 6,
+      "classId": 3,
+      "academicYearId": 1,
+      "termId": 3,
+      "enrollmentDate": "2024-09-01",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 7,
+      "classId": 4,
+      "academicYearId": 1,
+      "termId": 1,
+      "enrollmentDate": "2024-01-15",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    },
+    {
+      "studentId": 8,
+      "classId": 4,
+      "academicYearId": 1,
+      "termId": 2,
+      "enrollmentDate": "2024-05-01",
+      "classPosition": "2",
+      "remarks": "HIGHEST"
+    }
   ],
   "studentSiblings": [
     { "studentId": 1, "siblingId": 4 },
@@ -873,7 +937,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 1,
@@ -887,7 +953,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 1,
@@ -901,7 +969,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 1,
@@ -915,7 +985,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 1,
@@ -929,7 +1001,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 1,
@@ -943,7 +1017,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "1",
+      "remarks": "HIGHEST"
     },
     {
       "studentId": 2,
@@ -957,7 +1033,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "2",
+      "remarks": "SECOND HIGHEST"
     },
     {
       "studentId": 2,
@@ -971,7 +1049,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "2",
+      "remarks": "SECOND HIGHEST"
     },
     {
       "studentId": 2,
@@ -985,7 +1065,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "2",
+      "remarks": "SECOND HIGHEST"
     },
     {
       "studentId": 2,
@@ -999,7 +1081,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "2",
+      "remarks": "SECOND HIGHEST"
     },
     {
       "studentId": 3,
@@ -1013,7 +1097,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "3",
+      "remarks": "THIRD HIGHEST"
     },
     {
       "studentId": 3,
@@ -1027,7 +1113,9 @@
       "classTest": "9",
       "classMark": "18",
       "examMark": "72",
-      "totalMark": "90"
+      "totalMark": "90",
+      "subjectPosition": "3",
+      "remarks": "THIRD HIGHEST"
     }
   ],
   "positions": [
