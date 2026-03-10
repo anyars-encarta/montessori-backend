@@ -285,11 +285,16 @@ router.get("/overview", async (req, res) => {
       typeof req.query.className === "string" ? req.query.className.trim() : "";
     const studentNameFilter =
       typeof req.query.studentName === "string" ? req.query.studentName.trim() : "";
+    const enrollmentIdFilter = parsePositiveInt(req.query.enrollmentId);
     const classIdFilter = parsePositiveInt(req.query.classId);
     const academicYearIdFilter = parsePositiveInt(req.query.academicYearId);
     const termIdFilter = parsePositiveInt(req.query.termId);
 
     const conditions = [];
+
+    if (enrollmentIdFilter) {
+      conditions.push(eq(studentClassEnrollments.id, enrollmentIdFilter));
+    }
 
     if (classIdFilter) {
       conditions.push(eq(studentClassEnrollments.classId, classIdFilter));
