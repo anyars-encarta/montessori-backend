@@ -1,13 +1,15 @@
 import express from "express";
-import { and, desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { db } from "../db";
 import {
+  academicYears,
   classes,
   classSubjects,
   continuousAssessments,
   fees,
   studentClassEnrollments,
   studentFees,
+  subjects,
   students,
   terms,
 } from "../db/schema";
@@ -237,6 +239,10 @@ const runEnrollmentWorkflow = async (
         subjectId,
         academicYearId,
         termId,
+        homeWork1: "0",
+        homeWork2: "0",
+        exercise1: "0",
+        exercise2: "0",
         classMark: "0",
         examMark: "0",
         totalMark: "0",
@@ -270,6 +276,135 @@ router.get("/", async (req, res) => {
       success: false,
       error: "Failed to fetch student class enrollments",
     });
+  }
+});
+
+router.get("/overview", async (req, res) => {
+  try {
+    const classNameFilter =
+      typeof req.query.className === "string" ? req.query.className.trim() : "";
+    const studentNameFilter =
+      typeof req.query.studentName === "string" ? req.query.studentName.trim() : "";
+    const classIdFilter = parsePositiveInt(req.query.classId);
+    const academicYearIdFilter = parsePositiveInt(req.query.academicYearId);
+    const termIdFilter = parsePositiveInt(req.query.termId);
+
+    const conditions = [];
+
+    if (classIdFilter) {
+      conditions.push(eq(studentClassEnrollments.classId, classIdFilter));
+    }
+
+    if (classNameFilter) {
+      conditions.push(ilike(classes.name, `%${classNameFilter}%`));
+    }
+
+    if (studentNameFilter) {
+      conditions.push(
+        or(
+          ilike(students.firstName, `%${studentNameFilter}%`),
+          ilike(students.lastName, `%${studentNameFilter}%`),
+        ),
+      );
+    }
+
+    if (academicYearIdFilter) {
+      conditions.push(eq(studentClassEnrollments.academicYearId, academicYearIdFilter));
+    }
+
+    if (termIdFilter) {
+      conditions.push(eq(studentClassEnrollments.termId, termIdFilter));
+    }
+
+    const enrollmentRows = await db
+      .select({
+        enrollmentId: studentClassEnrollments.id,
+        studentId: students.id,
+        studentFirstName: students.firstName,
+        studentLastName: students.lastName,
+        registrationNumber: students.registrationNumber,
+        classId: classes.id,
+        className: classes.name,
+        classLevel: classes.level,
+        academicYearId: academicYears.id,
+        academicYear: academicYears.year,
+        termId: terms.id,
+        termName: terms.name,
+        termSequenceNumber: terms.sequenceNumber,
+        enrollmentDate: studentClassEnrollments.enrollmentDate,
+      })
+      .from(studentClassEnrollments)
+      .innerJoin(students, eq(studentClassEnrollments.studentId, students.id))
+      .innerJoin(classes, eq(studentClassEnrollments.classId, classes.id))
+      .innerJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
+      .innerJoin(terms, eq(studentClassEnrollments.termId, terms.id))
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(academicYears.year), classes.name, terms.sequenceNumber, students.firstName);
+
+    const data = await Promise.all(
+      enrollmentRows.map(async (row) => {
+        const assessmentRows = await db
+          .select({
+            id: continuousAssessments.id,
+            subjectId: continuousAssessments.subjectId,
+            subjectName: subjects.name,
+            homeWork1: continuousAssessments.homeWork1,
+            homeWork2: continuousAssessments.homeWork2,
+            exercise1: continuousAssessments.exercise1,
+            exercise2: continuousAssessments.exercise2,
+            classTest: continuousAssessments.classMark,
+            totalMark: continuousAssessments.totalMark,
+          })
+          .from(continuousAssessments)
+          .innerJoin(subjects, eq(continuousAssessments.subjectId, subjects.id))
+          .where(
+            and(
+              eq(continuousAssessments.studentId, row.studentId),
+              eq(continuousAssessments.academicYearId, row.academicYearId),
+              eq(continuousAssessments.termId, row.termId),
+            ),
+          )
+          .orderBy(subjects.name);
+
+        return {
+          id: row.enrollmentId,
+          student: {
+            id: row.studentId,
+            fullName: `${row.studentFirstName} ${row.studentLastName}`.trim(),
+            registrationNumber: row.registrationNumber,
+          },
+          class: {
+            id: row.classId,
+            name: row.className,
+            level: row.classLevel,
+          },
+          academicYear: {
+            id: row.academicYearId,
+            year: row.academicYear,
+          },
+          term: {
+            id: row.termId,
+            name: row.termName,
+            sequenceNumber: row.termSequenceNumber,
+          },
+          enrollmentDate: row.enrollmentDate,
+          assessments: assessmentRows,
+        };
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      data,
+      pagination: {
+        total: data.length,
+      },
+    });
+  } catch (error) {
+    console.error("GET /student-class-enrollments/overview error:", error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch class enrollment overview" });
   }
 });
 

@@ -50,6 +50,13 @@
       "when": 1772983906188,
       "tag": "0006_old_barracuda",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1773062665269,
+      "tag": "0007_nifty_tempest",
+      "breakpoints": true
     }
   ]
 }

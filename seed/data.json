@@ -866,6 +866,10 @@
       "subjectId": 1,
       "academicYearId": 1,
       "termId": 1,
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90"
@@ -875,69 +879,101 @@
       "subjectId": 2,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "19",
-      "examMark": "75",
-      "totalMark": "94"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 1,
       "subjectId": 3,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "17",
-      "examMark": "68",
-      "totalMark": "85"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 1,
       "subjectId": 4,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "16",
-      "examMark": "64",
-      "totalMark": "80"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 1,
       "subjectId": 5,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "20",
-      "examMark": "76",
-      "totalMark": "96"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 1,
       "subjectId": 6,
       "academicYearId": 1,
       "termId": 1,
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
       "classMark": "18",
-      "examMark": "70",
-      "totalMark": "88"
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 2,
       "subjectId": 1,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "19",
-      "examMark": "78",
-      "totalMark": "97"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 2,
       "subjectId": 2,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "20",
-      "examMark": "82",
-      "totalMark": "102"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 2,
       "subjectId": 3,
       "academicYearId": 1,
       "termId": 1,
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90"
@@ -947,27 +983,39 @@
       "subjectId": 4,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "17",
-      "examMark": "70",
-      "totalMark": "87"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 3,
       "subjectId": 1,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "15",
-      "examMark": "60",
-      "totalMark": "75"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     },
     {
       "studentId": 3,
       "subjectId": 2,
       "academicYearId": 1,
       "termId": 1,
-      "classMark": "14",
-      "examMark": "56",
-      "totalMark": "70"
+      "homeWork1": "9",
+      "homeWork2": "9",
+      "exercise1": "9",
+      "exercise2": "9",
+      "classMark": "18",
+      "examMark": "72",
+      "totalMark": "90"
     }
   ],
   "positions": [
