@@ -13,6 +13,7 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { string } from "zod";
 
 // ============= ENUMS =============
 export const staffTypeEnum = pgEnum("staff_type", ["teacher", "non_teaching"]);
@@ -35,7 +36,7 @@ export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
  */
 export const academicYears = pgTable("academic_years", {
   id: serial("id").primaryKey(),
-  year: integer("year").notNull().unique(),
+  year: varchar("year", { length: 20 }).notNull().unique(), // e.g., "2024-2025"
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),

@@ -1,0 +1,1 @@
+ALTER TABLE "academic_years" ALTER COLUMN "year" SET DATA TYPE varchar(20);

@@ -44,7 +44,7 @@ type SeedUser = {
 };
 
 type SeedAcademicYear = {
-  year: number;
+  year: string;
   startDate: string;
   endDate: string;
 };
@@ -292,7 +292,7 @@ const resolveAcademicYearId = (
   reference: number,
   startDate: string,
   seedAcademicYears: SeedAcademicYear[],
-  academicYearIdByYear: Map<number, number>,
+  academicYearIdByYear: Map<string, number>,
 ) => {
   const fromIndex = seedAcademicYears[reference - 1];
   if (fromIndex) {
@@ -300,10 +300,10 @@ const resolveAcademicYearId = (
     if (mapped) return mapped;
   }
 
-  const directYearMatch = academicYearIdByYear.get(reference);
+  const directYearMatch = academicYearIdByYear.get(String(reference));
   if (directYearMatch) return directYearMatch;
 
-  const startYear = Number(startDate.slice(0, 4));
+  const startYear = startDate.slice(0, 4);
   const byDate = academicYearIdByYear.get(startYear);
   if (byDate) return byDate;
 
@@ -316,7 +316,7 @@ const resolveTermId = (
   reference: number,
   seedTerms: SeedTerm[],
   seedAcademicYears: SeedAcademicYear[],
-  academicYearIdByYear: Map<number, number>,
+  academicYearIdByYear: Map<string, number>,
   termIdByAcademicYearAndSequence: Map<string, number>,
 ) => {
   const fromIndex = seedTerms[reference - 1];

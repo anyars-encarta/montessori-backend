@@ -106,12 +106,12 @@ router.post("/", async (req, res) => {
   try {
     const { year, startDate, endDate } = req.body;
 
-    const parsedYear = Number.parseInt(String(year), 10);
+    const parsedYear = String(year);
     const normalizedStartDate = normalizeDateInput(startDate);
     const normalizedEndDate = normalizeDateInput(endDate);
 
-    if (!Number.isFinite(parsedYear)) {
-      return res.status(400).json({ success: false, error: "year must be a number" });
+    if (!parsedYear) {
+      return res.status(400).json({ success: false, error: "year must be a string" });
     }
 
     if (!normalizedStartDate || !normalizedEndDate) {
@@ -157,12 +157,12 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ success: false, error: "Invalid academic year id" });
     }
 
-    const parsedYear = Number.parseInt(String(year), 10);
+    const parsedYear = String(year);
     const normalizedStartDate = normalizeDateInput(startDate);
     const normalizedEndDate = normalizeDateInput(endDate);
 
-    if (!Number.isFinite(parsedYear)) {
-      return res.status(400).json({ success: false, error: "year must be a number" });
+    if (!parsedYear) {
+      return res.status(400).json({ success: false, error: "year must be a string" });
     }
 
     if (!normalizedStartDate || !normalizedEndDate) {
