@@ -21,6 +21,7 @@ import expensesRoutes from "./routes/expenses.js";
 import studentAttendancesRoutes from "./routes/studentAttendances.js";
 import staffAttendancesRoutes from "./routes/staffAttendances.js";
 import cloudinaryRoutes from "./routes/cloudinary.js";
+import dashboardRoutes from "./routes/dashboard.js";
 import cors from "cors";
 import { toNodeHandler } from "better-auth/node";
 import securityMiddleware from "./middleware/security.js";
@@ -93,6 +94,7 @@ app.use("/api/expenses", expensesRoutes);
 app.use("/api/student-attendances", studentAttendancesRoutes);
 app.use("/api/staff-attendances", staffAttendancesRoutes);
 app.use("/api/cloudinary", cloudinaryRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 // Routes
 app.get("/", (req, res) => {

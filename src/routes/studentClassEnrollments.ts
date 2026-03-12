@@ -1,5 +1,5 @@
 import express from "express";
-import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   academicYears,
@@ -351,6 +351,10 @@ router.get("/", async (req, res) => {
 
 router.get("/overview", async (req, res) => {
   try {
+    const currentPage = Math.max(1, parsePositiveInt(req.query.page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(req.query.limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;
+
     const classNameFilter =
       typeof req.query.className === "string" ? req.query.className.trim() : "";
     const studentNameFilter =
@@ -391,6 +395,20 @@ router.get("/overview", async (req, res) => {
       conditions.push(eq(studentClassEnrollments.termId, termIdFilter));
     }
 
+    const whereClause = conditions.length ? and(...conditions) : undefined;
+
+    const countRows = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(studentClassEnrollments)
+      .innerJoin(students, eq(studentClassEnrollments.studentId, students.id))
+      .innerJoin(classes, eq(studentClassEnrollments.classId, classes.id))
+      .innerJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
+      .innerJoin(terms, eq(studentClassEnrollments.termId, terms.id))
+      .where(whereClause);
+
+    const total = Number(countRows[0]?.count ?? 0);
+    const totalPages = total ? Math.ceil(total / limitPerPage) : 0;
+
     const enrollmentRows = await db
       .select({
         enrollmentId: studentClassEnrollments.id,
@@ -415,8 +433,10 @@ router.get("/overview", async (req, res) => {
       .innerJoin(classes, eq(studentClassEnrollments.classId, classes.id))
       .innerJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
       .innerJoin(terms, eq(studentClassEnrollments.termId, terms.id))
-      .where(conditions.length ? and(...conditions) : undefined)
-      .orderBy(desc(academicYears.year), classes.name, terms.sequenceNumber, students.firstName);
+      .where(whereClause)
+      .orderBy(desc(academicYears.year), classes.name, terms.sequenceNumber, students.firstName)
+      .limit(limitPerPage)
+      .offset(offset);
 
     const data = await Promise.all(
       enrollmentRows.map(async (row) => {
@@ -480,7 +500,10 @@ router.get("/overview", async (req, res) => {
       success: true,
       data,
       pagination: {
-        total: data.length,
+        page: currentPage,
+        limit: limitPerPage,
+        total,
+        totalPages,
       },
     });
   } catch (error) {
