@@ -89,6 +89,8 @@ router.post("/", async (req, res) => {
       imageCldPubId,
       registrationNumber,
       isActive,
+      onScholarship,
+      getDiscount,
     } = req.body;
 
     const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
@@ -97,6 +99,8 @@ router.post("/", async (req, res) => {
     const normalizedAdmissionDate = parseDateInput(admissionDate);
     const normalizedDateOfBirth = parseDateInput(dateOfBirth);
     const normalizedIsActive = parseOptionalBoolean(isActive);
+    const normalizedOnScholarship = parseOptionalBoolean(onScholarship);
+    const normalizedGetDiscount = parseOptionalBoolean(getDiscount);
 
     const normalizedCloudinaryImageUrl =
       typeof cloudinaryImageUrl === "string" && cloudinaryImageUrl.trim()
@@ -149,6 +153,20 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (normalizedOnScholarship === null) {
+      return res.status(400).json({
+        success: false,
+        error: "onScholarship must be a boolean",
+      });
+    }
+
+    if (normalizedGetDiscount === null) {
+      return res.status(400).json({
+        success: false,
+        error: "getDiscount must be a boolean",
+      });
+    }
+
     const [createdStudent] = await db
       .insert(students)
       .values({
@@ -161,6 +179,10 @@ router.post("/", async (req, res) => {
         imageCldPubId: normalizedImageCldPubId,
         registrationNumber: normalizedRegistrationNumber,
         ...(normalizedIsActive !== undefined ? { isActive: normalizedIsActive } : {}),
+        ...(normalizedOnScholarship !== undefined
+          ? { onScholarship: normalizedOnScholarship }
+          : {}),
+        ...(normalizedGetDiscount !== undefined ? { getDiscount: normalizedGetDiscount } : {}),
       })
       .returning();
 
@@ -926,6 +948,8 @@ router.put("/:id", async (req, res) => {
       imageCldPubId,
       registrationNumber,
       isActive,
+      onScholarship,
+      getDiscount,
     } = req.body;
 
     const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
@@ -934,6 +958,8 @@ router.put("/:id", async (req, res) => {
     const normalizedAdmissionDate = parseDateInput(admissionDate);
     const normalizedDateOfBirth = parseDateInput(dateOfBirth);
     const normalizedIsActive = parseOptionalBoolean(isActive);
+    const normalizedOnScholarship = parseOptionalBoolean(onScholarship);
+    const normalizedGetDiscount = parseOptionalBoolean(getDiscount);
 
     const normalizedCloudinaryImageUrl =
       typeof cloudinaryImageUrl === "string" && cloudinaryImageUrl.trim()
@@ -986,6 +1012,20 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    if (normalizedOnScholarship === null) {
+      return res.status(400).json({
+        success: false,
+        error: "onScholarship must be a boolean",
+      });
+    }
+
+    if (normalizedGetDiscount === null) {
+      return res.status(400).json({
+        success: false,
+        error: "getDiscount must be a boolean",
+      });
+    }
+
     const existingStudent = await db
       .select({ id: students.id })
       .from(students)
@@ -1007,6 +1047,10 @@ router.put("/:id", async (req, res) => {
         imageCldPubId: normalizedImageCldPubId,
         registrationNumber: normalizedRegistrationNumber,
         ...(normalizedIsActive !== undefined ? { isActive: normalizedIsActive } : {}),
+        ...(normalizedOnScholarship !== undefined
+          ? { onScholarship: normalizedOnScholarship }
+          : {}),
+        ...(normalizedGetDiscount !== undefined ? { getDiscount: normalizedGetDiscount } : {}),
         updatedAt: new Date(),
       })
       .where(eq(students.id, studentId))

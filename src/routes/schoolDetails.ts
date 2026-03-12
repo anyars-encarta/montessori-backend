@@ -52,7 +52,7 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, address, phone, email, website, logo } = req.body;
+    const { name, address, phone, email, website, logo, discountType, discountAmount } = req.body;
 
     const existing = await db
       .select({ id: schoolDetails.id })
@@ -73,6 +73,12 @@ router.post("/", async (req, res) => {
     const normalizedWebsite =
       typeof website === "string" && website.trim() ? website.trim() : null;
     const normalizedLogo = typeof logo === "string" && logo.trim() ? logo.trim() : null;
+    const normalizedDiscountType =
+      discountType === "percentage" ? "percentage" : "value";
+    const parsedDiscountAmount = Number.parseFloat(String(discountAmount));
+    const normalizedDiscountAmount = Number.isFinite(parsedDiscountAmount)
+      ? String(Math.max(0, parsedDiscountAmount))
+      : "0";
 
     if (!normalizedName || !normalizedAddress || !normalizedPhone || !normalizedEmail) {
       return res.status(400).json({
@@ -90,6 +96,8 @@ router.post("/", async (req, res) => {
         email: normalizedEmail,
         website: normalizedWebsite,
         logo: normalizedLogo,
+        discountType: normalizedDiscountType,
+        discountAmount: normalizedDiscountAmount,
       })
       .returning();
 
@@ -108,7 +116,7 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ success: false, error: "Invalid school details id" });
     }
 
-    const { name, address, phone, email, website, logo } = req.body;
+    const { name, address, phone, email, website, logo, discountType, discountAmount } = req.body;
 
     const normalizedName = typeof name === "string" ? name.trim() : "";
     const normalizedAddress = typeof address === "string" ? address.trim() : "";
@@ -117,6 +125,12 @@ router.put("/:id", async (req, res) => {
     const normalizedWebsite =
       typeof website === "string" && website.trim() ? website.trim() : null;
     const normalizedLogo = typeof logo === "string" && logo.trim() ? logo.trim() : null;
+    const normalizedDiscountType =
+      discountType === "percentage" ? "percentage" : "value";
+    const parsedDiscountAmount = Number.parseFloat(String(discountAmount));
+    const normalizedDiscountAmount = Number.isFinite(parsedDiscountAmount)
+      ? String(Math.max(0, parsedDiscountAmount))
+      : "0";
 
     if (!normalizedName || !normalizedAddress || !normalizedPhone || !normalizedEmail) {
       return res.status(400).json({
@@ -143,6 +157,8 @@ router.put("/:id", async (req, res) => {
         email: normalizedEmail,
         website: normalizedWebsite,
         logo: normalizedLogo,
+        discountType: normalizedDiscountType,
+        discountAmount: normalizedDiscountAmount,
         updatedAt: new Date(),
       })
       .where(eq(schoolDetails.id, id))

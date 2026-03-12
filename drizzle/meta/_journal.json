@@ -15,6 +15,13 @@
       "when": 1773217799445,
       "tag": "0001_breezy_dust",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773301280442,
+      "tag": "0002_small_mother_askani",
+      "breakpoints": true
     }
   ]
 }

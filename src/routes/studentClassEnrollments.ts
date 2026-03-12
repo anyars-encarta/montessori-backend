@@ -7,6 +7,7 @@ import {
   classSubjects,
   continuousAssessments,
   fees,
+  schoolDetails,
   studentClassEnrollments,
   studentFees,
   subjects,
@@ -46,6 +47,28 @@ const parseDateInput = (value: unknown) => {
   return parsed.toISOString().slice(0, 10);
 };
 
+const applyDiscountToAmount = (
+  amount: string,
+  discountType: "value" | "percentage",
+  discountAmount: string,
+) => {
+  const baseAmount = Number.parseFloat(amount);
+  const parsedDiscountAmount = Number.parseFloat(discountAmount);
+
+  if (!Number.isFinite(baseAmount) || !Number.isFinite(parsedDiscountAmount)) {
+    return amount;
+  }
+
+  const normalizedDiscountAmount = Math.max(0, parsedDiscountAmount);
+
+  const discountedAmount =
+    discountType === "percentage"
+      ? baseAmount - (baseAmount * normalizedDiscountAmount) / 100
+      : baseAmount - normalizedDiscountAmount;
+
+  return Math.max(0, discountedAmount).toFixed(2);
+};
+
 type EnrollmentMode = "admission" | "promotion";
 
 const runEnrollmentWorkflow = async (
@@ -61,7 +84,14 @@ const runEnrollmentWorkflow = async (
   const { studentId, classId, academicYearId, termId, enrollmentDate } = payload;
 
   const [studentRows, classRows, termRows] = await Promise.all([
-    db.select({ id: students.id }).from(students).where(eq(students.id, studentId)),
+    db
+      .select({
+        id: students.id,
+        onScholarship: students.onScholarship,
+        getDiscount: students.getDiscount,
+      })
+      .from(students)
+      .where(eq(students.id, studentId)),
     db
       .select({ id: classes.id, level: classes.level })
       .from(classes)
@@ -86,6 +116,7 @@ const runEnrollmentWorkflow = async (
 
   const selectedClass = classRows[0]!;
   const selectedTerm = termRows[0]!;
+  const selectedStudent = studentRows[0]!;
 
   if (selectedTerm.academicYearId !== academicYearId) {
     return {
@@ -187,14 +218,50 @@ const runEnrollmentWorkflow = async (
 
   const existingStudentFeeIds = new Set(existingStudentFeeRows.map((row) => row.feeId));
 
+  const shouldSkipPromotionFees = mode === "promotion" && selectedStudent.onScholarship;
+  const shouldApplyPromotionDiscount =
+    mode === "promotion" && selectedStudent.getDiscount && !selectedStudent.onScholarship;
+
+  let discountConfig:
+    | {
+        discountType: "value" | "percentage";
+        discountAmount: string;
+      }
+    | null = null;
+
+  if (shouldApplyPromotionDiscount) {
+    const [schoolConfig] = await db
+      .select({
+        discountType: schoolDetails.discountType,
+        discountAmount: schoolDetails.discountAmount,
+      })
+      .from(schoolDetails)
+      .limit(1);
+
+    if (schoolConfig) {
+      discountConfig = {
+        discountType: schoolConfig.discountType,
+        discountAmount: schoolConfig.discountAmount,
+      };
+    }
+  }
+
   const feeAssignments = applicableFees
     .filter((fee) => !existingStudentFeeIds.has(fee.id))
+    .filter(() => !shouldSkipPromotionFees)
     .map((fee) => ({
       studentId,
       feeId: fee.id,
       academicYearId,
       termId,
-      amount: fee.amount,
+      amount:
+        discountConfig !== null
+          ? applyDiscountToAmount(
+              fee.amount,
+              discountConfig.discountType,
+              discountConfig.discountAmount,
+            )
+          : fee.amount,
       amountPaid: "0",
       status: "pending" as const,
       dueDate: selectedTerm.endDate,
@@ -261,6 +328,8 @@ const runEnrollmentWorkflow = async (
       feesApplied: feeAssignments.length,
       feeNamesApplied,
       subjectsApplied: subjectIds.length,
+      feesSkippedByScholarship: shouldSkipPromotionFees,
+      discountAppliedOnPromotionFees: discountConfig !== null,
     },
   };
 };

@@ -28,6 +28,7 @@ export const livingWithEnum = pgEnum("living_with", [
   "other_person",
 ]);
 export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
+export const discountTypeEnum = pgEnum("discount_type", ["value", "percentage"]);
 // ============= CORE TABLES =============
 
 /**
@@ -154,6 +155,8 @@ export const students = pgTable("students", {
   imageCldPubId: varchar("image_cld_pub_id", { length: 255 }),
   registrationNumber: varchar("registration_number", { length: 50 }).unique(),
   isActive: boolean("is_active").notNull().default(true),
+  onScholarship: boolean("on_scholarship").notNull().default(false),
+  getDiscount: boolean("get_discount").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -494,6 +497,8 @@ export const schoolDetails = pgTable("school_details", {
   email: varchar("email", { length: 100 }).notNull(),
   website: varchar("website", { length: 255 }),
   logo: varchar("logo", { length: 255 }),
+  discountType: discountTypeEnum("discount_type").notNull(),
+  discountAmount: numeric("discount_amount", { precision: 5, scale: 2 }).notNull().default("0"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
