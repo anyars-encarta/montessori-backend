@@ -1835,7 +1835,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-02",
-      "classPosition": 1,
+      "classPosition": "1",
       "remarks": null
     },
     {
@@ -1844,7 +1844,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-03",
-      "classPosition": 2,
+      "classPosition": "2",
       "remarks": null
     },
     {
@@ -1853,7 +1853,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-04",
-      "classPosition": 3,
+      "classPosition": "3",
       "remarks": null
     },
     {
@@ -1862,7 +1862,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-05",
-      "classPosition": 4,
+      "classPosition": "4",
       "remarks": null
     },
     {
@@ -1871,7 +1871,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-06",
-      "classPosition": 5,
+      "classPosition": "5",
       "remarks": null
     },
     {
@@ -1880,7 +1880,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-07",
-      "classPosition": 6,
+      "classPosition": "6",
       "remarks": null
     },
     {
@@ -1889,7 +1889,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-08",
-      "classPosition": 7,
+      "classPosition": "7",
       "remarks": null
     },
     {
@@ -1898,7 +1898,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-09",
-      "classPosition": 8,
+      "classPosition": "8",
       "remarks": null
     },
     {
@@ -1907,7 +1907,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-10",
-      "classPosition": 9,
+      "classPosition": "9",
       "remarks": "Needs support in reading"
     },
     {
@@ -1916,7 +1916,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-11",
-      "classPosition": 10,
+      "classPosition": "10",
       "remarks": null
     },
     {
@@ -1925,7 +1925,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-12",
-      "classPosition": 11,
+      "classPosition": "11",
       "remarks": null
     },
     {
@@ -1934,7 +1934,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-13",
-      "classPosition": 12,
+      "classPosition": "12",
       "remarks": null
     },
     {
@@ -1943,7 +1943,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-14",
-      "classPosition": 13,
+      "classPosition": "13",
       "remarks": null
     },
     {
@@ -1952,7 +1952,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-15",
-      "classPosition": 14,
+      "classPosition": "14",
       "remarks": null
     },
     {
@@ -1961,7 +1961,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-16",
-      "classPosition": 15,
+      "classPosition": "15",
       "remarks": null
     },
     {
@@ -1970,7 +1970,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-17",
-      "classPosition": 16,
+      "classPosition": "16",
       "remarks": null
     },
     {
@@ -1979,7 +1979,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-18",
-      "classPosition": 17,
+      "classPosition": "17",
       "remarks": null
     },
     {
@@ -1988,7 +1988,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-19",
-      "classPosition": 18,
+      "classPosition": "18",
       "remarks": "Needs support in reading"
     },
     {
@@ -1997,7 +1997,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-20",
-      "classPosition": 19,
+      "classPosition": "19",
       "remarks": null
     },
     {
@@ -2006,7 +2006,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-01",
-      "classPosition": 20,
+      "classPosition": "20",
       "remarks": null
     },
     {
@@ -2015,7 +2015,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-02",
-      "classPosition": 21,
+      "classPosition": "21",
       "remarks": null
     },
     {
@@ -2024,7 +2024,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-03",
-      "classPosition": 22,
+      "classPosition": "22",
       "remarks": null
     },
     {
@@ -2033,7 +2033,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-04",
-      "classPosition": 23,
+      "classPosition": "23",
       "remarks": null
     },
     {
@@ -2042,7 +2042,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-05",
-      "classPosition": 24,
+      "classPosition": "24",
       "remarks": null
     },
     {
@@ -2051,7 +2051,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-06",
-      "classPosition": 25,
+      "classPosition": "25",
       "remarks": null
     },
     {
@@ -2060,7 +2060,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-07",
-      "classPosition": 26,
+      "classPosition": "26",
       "remarks": null
     },
     {
@@ -2069,7 +2069,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-08",
-      "classPosition": 27,
+      "classPosition": "27",
       "remarks": "Needs support in reading"
     },
     {
@@ -2078,7 +2078,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-09",
-      "classPosition": 28,
+      "classPosition": "28",
       "remarks": null
     },
     {
@@ -2087,7 +2087,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-10",
-      "classPosition": 29,
+      "classPosition": "29",
       "remarks": null
     },
     {
@@ -2096,7 +2096,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-11",
-      "classPosition": 30,
+      "classPosition": "30",
       "remarks": null
     },
     {
@@ -2105,7 +2105,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-12",
-      "classPosition": 31,
+      "classPosition": "31",
       "remarks": null
     },
     {
@@ -2114,7 +2114,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-13",
-      "classPosition": 32,
+      "classPosition": "32",
       "remarks": null
     },
     {
@@ -2123,7 +2123,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-14",
-      "classPosition": 33,
+      "classPosition": "33",
       "remarks": null
     },
     {
@@ -2132,7 +2132,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-15",
-      "classPosition": 34,
+      "classPosition": "34",
       "remarks": null
     },
     {
@@ -2141,7 +2141,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-16",
-      "classPosition": 35,
+      "classPosition": "35",
       "remarks": null
     },
     {
@@ -2150,7 +2150,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-17",
-      "classPosition": 36,
+      "classPosition": "36",
       "remarks": "Needs support in reading"
     },
     {
@@ -2159,7 +2159,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-18",
-      "classPosition": 37,
+      "classPosition": "37",
       "remarks": null
     },
     {
@@ -2168,7 +2168,7 @@
       "academicYearId": 1,
       "termId": 2,
       "enrollmentDate": "2024-06-19",
-      "classPosition": 38,
+      "classPosition": "38",
       "remarks": null
     },
     {
@@ -2177,7 +2177,7 @@
       "academicYearId": 1,
       "termId": 3,
       "enrollmentDate": "2024-10-20",
-      "classPosition": 39,
+      "classPosition": "39",
       "remarks": null
     },
     {
@@ -2186,7 +2186,7 @@
       "academicYearId": 1,
       "termId": 1,
       "enrollmentDate": "2024-02-01",
-      "classPosition": 40,
+      "classPosition": "40",
       "remarks": null
     },
     {
@@ -3185,7 +3185,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-02",
-      "classPosition": 1,
+      "classPosition": "1",
       "remarks": null
     },
     {
@@ -3194,7 +3194,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-03",
-      "classPosition": 2,
+      "classPosition": "2",
       "remarks": null
     },
     {
@@ -3203,7 +3203,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-04",
-      "classPosition": 3,
+      "classPosition": "3",
       "remarks": null
     },
     {
@@ -3212,7 +3212,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-05",
-      "classPosition": 4,
+      "classPosition": "4",
       "remarks": null
     },
     {
@@ -3221,7 +3221,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-06",
-      "classPosition": 5,
+      "classPosition": "5",
       "remarks": null
     },
     {
@@ -3230,7 +3230,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-07",
-      "classPosition": 6,
+      "classPosition": "6",
       "remarks": null
     },
     {
@@ -3239,7 +3239,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-08",
-      "classPosition": 7,
+      "classPosition": "7",
       "remarks": "Repeat candidate monitoring"
     },
     {
@@ -3248,7 +3248,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-09",
-      "classPosition": 8,
+      "classPosition": "8",
       "remarks": null
     },
     {
@@ -3257,7 +3257,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-10",
-      "classPosition": 9,
+      "classPosition": "9",
       "remarks": null
     },
     {
@@ -3266,7 +3266,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-11",
-      "classPosition": 10,
+      "classPosition": "10",
       "remarks": null
     },
     {
@@ -3275,7 +3275,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-12",
-      "classPosition": 11,
+      "classPosition": "11",
       "remarks": null
     },
     {
@@ -3284,7 +3284,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-13",
-      "classPosition": 12,
+      "classPosition": "12",
       "remarks": null
     },
     {
@@ -3293,7 +3293,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-14",
-      "classPosition": 13,
+      "classPosition": "13",
       "remarks": null
     },
     {
@@ -3302,7 +3302,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-15",
-      "classPosition": 14,
+      "classPosition": "14",
       "remarks": "Repeat candidate monitoring"
     },
     {
@@ -3311,7 +3311,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-16",
-      "classPosition": 15,
+      "classPosition": "15",
       "remarks": null
     },
     {
@@ -3320,7 +3320,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-17",
-      "classPosition": 16,
+      "classPosition": "16",
       "remarks": null
     },
     {
@@ -3329,7 +3329,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-18",
-      "classPosition": 17,
+      "classPosition": "17",
       "remarks": null
     },
     {
@@ -3338,7 +3338,7 @@
       "academicYearId": 2,
       "termId": 6,
       "enrollmentDate": "2025-10-19",
-      "classPosition": 18,
+      "classPosition": "18",
       "remarks": null
     },
     {
@@ -3347,7 +3347,7 @@
       "academicYearId": 2,
       "termId": 4,
       "enrollmentDate": "2025-02-20",
-      "classPosition": 19,
+      "classPosition": "19",
       "remarks": null
     },
     {
@@ -3356,7 +3356,7 @@
       "academicYearId": 2,
       "termId": 5,
       "enrollmentDate": "2025-06-01",
-      "classPosition": 20,
+      "classPosition": "20",
       "remarks": null
     },
     {

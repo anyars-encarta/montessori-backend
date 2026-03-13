@@ -1,0 +1,1 @@
+ALTER TABLE "student_class_enrollments" ADD COLUMN "aggregate" numeric(8, 2);

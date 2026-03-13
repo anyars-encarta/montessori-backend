@@ -22,6 +22,20 @@
       "when": 1773301280442,
       "tag": "0002_small_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773413723154,
+      "tag": "0003_sour_riptide",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773416131761,
+      "tag": "0004_groovy_justice",
+      "breakpoints": true
     }
   ]
 }

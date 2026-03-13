@@ -1,0 +1,2 @@
+ALTER TABLE "continuous_assessments" ALTER COLUMN "subject_position" SET DATA TYPE varchar(10);--> statement-breakpoint
+ALTER TABLE "student_class_enrollments" ALTER COLUMN "class_position" SET DATA TYPE varchar(10);
