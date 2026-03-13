@@ -69,7 +69,7 @@ const applyDiscountToAmount = (
   return Math.max(0, discountedAmount).toFixed(2);
 };
 
-type EnrollmentMode = "admission" | "promotion";
+type EnrollmentMode = "admission" | "promotion" | "repeat";
 
 const runEnrollmentWorkflow = async (
   mode: EnrollmentMode,
@@ -142,7 +142,7 @@ const runEnrollmentWorkflow = async (
     };
   }
 
-  if (mode === "promotion" && !existingEnrollments.length) {
+  if (mode !== "admission" && !existingEnrollments.length) {
     return {
       status: 409,
       error: "Student has no previous enrollment records. Use admission instead" as const,
@@ -218,9 +218,9 @@ const runEnrollmentWorkflow = async (
 
   const existingStudentFeeIds = new Set(existingStudentFeeRows.map((row) => row.feeId));
 
-  const shouldSkipPromotionFees = mode === "promotion" && selectedStudent.onScholarship;
+  const shouldSkipPromotionFees = mode !== "admission" && selectedStudent.onScholarship;
   const shouldApplyPromotionDiscount =
-    mode === "promotion" && selectedStudent.getDiscount && !selectedStudent.onScholarship;
+    mode !== "admission" && selectedStudent.getDiscount && !selectedStudent.onScholarship;
 
   let discountConfig:
     | {
@@ -607,6 +607,131 @@ router.post("/promote", async (req, res) => {
     return res.status(result.status).json({ success: true, data: result.data });
   } catch (error) {
     console.error("POST /student-class-enrollments/promote error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.post("/repeat", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.body?.studentId);
+    const classId = parsePositiveInt(req.body?.classId);
+    const academicYearId = parsePositiveInt(req.body?.academicYearId);
+    const termId = parsePositiveInt(req.body?.termId);
+    const enrollmentDate = parseDateInput(req.body?.enrollmentDate);
+
+    if (!studentId || !classId || !academicYearId || !termId || !enrollmentDate) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "studentId, classId, academicYearId, termId and a valid enrollmentDate are required",
+      });
+    }
+
+    const result = await runEnrollmentWorkflow("repeat", {
+      studentId,
+      classId,
+      academicYearId,
+      termId,
+      enrollmentDate,
+    });
+
+    if ("error" in result) {
+      return res.status(result.status).json({ success: false, error: result.error });
+    }
+
+    return res.status(result.status).json({ success: true, data: result.data });
+  } catch (error) {
+    console.error("POST /student-class-enrollments/repeat error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.post("/bulk-transition", async (req, res) => {
+  try {
+    const rawEnrollmentIds = Array.isArray(req.body?.enrollmentIds)
+      ? (req.body.enrollmentIds as unknown[])
+      : [];
+    const enrollmentIds = rawEnrollmentIds.reduce<number[]>((acc, value) => {
+      const parsedValue = parsePositiveInt(value);
+      if (parsedValue !== null) {
+        acc.push(parsedValue);
+      }
+      return acc;
+    }, []);
+
+    const classId = parsePositiveInt(req.body?.classId);
+    const academicYearId = parsePositiveInt(req.body?.academicYearId);
+    const termId = parsePositiveInt(req.body?.termId);
+    const enrollmentDate = parseDateInput(req.body?.enrollmentDate);
+    const action = req.body?.action === "repeat" ? "repeat" : req.body?.action === "promote" ? "promote" : null;
+
+    if (!enrollmentIds.length || !classId || !academicYearId || !termId || !enrollmentDate || !action) {
+      return res.status(400).json({
+        success: false,
+        error:
+          "enrollmentIds, action (promote|repeat), classId, academicYearId, termId and a valid enrollmentDate are required",
+      });
+    }
+
+    const uniqueEnrollmentIds = Array.from(new Set(enrollmentIds));
+
+    const enrollmentRows = await db
+      .select({
+        id: studentClassEnrollments.id,
+        studentId: studentClassEnrollments.studentId,
+      })
+      .from(studentClassEnrollments)
+      .where(inArray(studentClassEnrollments.id, uniqueEnrollmentIds));
+
+    if (!enrollmentRows.length) {
+      return res.status(404).json({
+        success: false,
+        error: "No matching enrollments were found for the selected IDs",
+      });
+    }
+
+    const workflowMode: EnrollmentMode = action === "promote" ? "promotion" : "repeat";
+    const successResults: Array<{ enrollmentId: number; studentId: number }> = [];
+    const failures: Array<{ enrollmentId: number; studentId: number; error: string }> = [];
+
+    for (const row of enrollmentRows) {
+      const result = await runEnrollmentWorkflow(workflowMode, {
+        studentId: row.studentId,
+        classId,
+        academicYearId,
+        termId,
+        enrollmentDate,
+      });
+
+      if ("error" in result) {
+        failures.push({
+          enrollmentId: row.id,
+          studentId: row.studentId,
+          error: result.error,
+        });
+        continue;
+      }
+
+      successResults.push({
+        enrollmentId: row.id,
+        studentId: row.studentId,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        action,
+        requestedCount: uniqueEnrollmentIds.length,
+        processedCount: enrollmentRows.length,
+        successCount: successResults.length,
+        failedCount: failures.length,
+        successfulEnrollmentIds: successResults.map((result) => result.enrollmentId),
+        failures,
+      },
+    });
+  } catch (error) {
+    console.error("POST /student-class-enrollments/bulk-transition error:", error);
     return res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
