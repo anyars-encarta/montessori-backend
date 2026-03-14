@@ -19,7 +19,7 @@ import { string } from "zod";
 export const staffTypeEnum = pgEnum("staff_type", ["teacher", "non_teaching"]);
 export const attendanceStatusEnum = pgEnum("attendance_status", ["present", "absent"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "partial", "paid"]);
-export const feeTypeEnum = pgEnum("fee_type", ["admission", "promotion", "tuition", "other"]);
+export const feeTypeEnum = pgEnum("fee_type", ["admission", "tuition", "feeding", "other"]);
 export const livingWithEnum = pgEnum("living_with", [
   "both_parents",
   "mother_only",

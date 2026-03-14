@@ -36,6 +36,13 @@
       "when": 1773416131761,
       "tag": "0004_groovy_justice",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1773500000000,
+      "tag": "0005_awesome_fee_type_update",
+      "breakpoints": true
     }
   ]
 }

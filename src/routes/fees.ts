@@ -34,11 +34,11 @@ const parseMoneyString = (value: unknown) => {
 
 const isFeeType = (
   value: unknown,
-): value is "admission" | "promotion" | "tuition" | "other" => {
+): value is "admission" | "tuition" | "feeding" | "other" => {
   return (
     value === "admission" ||
-    value === "promotion" ||
     value === "tuition" ||
+    value === "feeding" ||
     value === "other"
   );
 };
@@ -164,6 +164,15 @@ router.post("/", async (req, res) => {
     const applicableToLevel = normalizeOptionalText(req.body?.applicableToLevel);
     const feeType = req.body?.feeType;
 
+    console.log("Creating fee with data:", {
+      name,
+      description,
+      amount,
+      feeType,
+      academicYearId,
+      applicableToLevel,
+    });
+    
     if (!name) {
       return res.status(400).json({ success: false, error: "name is required" });
     }
@@ -179,7 +188,7 @@ router.post("/", async (req, res) => {
     if (!isFeeType(feeType)) {
       return res.status(400).json({
         success: false,
-        error: "feeType must be one of: admission, promotion, tuition, other",
+        error: "feeType must be one of: admission, tuition, feeding, other",
       });
     }
 
@@ -243,7 +252,7 @@ router.put("/:id", async (req, res) => {
       name?: string;
       description?: string | null;
       amount?: string;
-      feeType?: "admission" | "promotion" | "tuition" | "other";
+      feeType?: "admission" | "tuition" | "feeding" | "other";
       academicYearId?: number;
       applicableToLevel?: string | null;
       updatedAt?: Date;
@@ -276,7 +285,7 @@ router.put("/:id", async (req, res) => {
       if (!isFeeType(req.body.feeType)) {
         return res.status(400).json({
           success: false,
-          error: "feeType must be one of: admission, promotion, tuition, other",
+          error: "feeType must be one of: admission, tuition, feeding, other",
         });
       }
       updates.feeType = req.body.feeType;
