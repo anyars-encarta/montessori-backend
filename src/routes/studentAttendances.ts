@@ -26,6 +26,13 @@ const isIsoDate = (value: unknown) => {
   return !Number.isNaN(parsed.getTime());
 };
 
+const isWeekdayDate = (value: string) => {
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) return false;
+  const day = parsed.getUTCDay();
+  return day >= 1 && day <= 5;
+};
+
 const isAttendanceStatus = (value: unknown): value is "present" | "absent" => {
   return value === "present" || value === "absent";
 };
@@ -48,6 +55,13 @@ router.get("/daily-register", async (req, res) => {
         success: false,
         error:
           "classId, academicYearId, termId, and attendanceDate (YYYY-MM-DD) are required",
+      });
+    }
+
+    if (!isWeekdayDate(attendanceDate)) {
+      return res.status(400).json({
+        success: false,
+        error: "Attendance can only be marked for Monday to Friday",
       });
     }
 
@@ -143,6 +157,13 @@ router.post("/bulk-mark", async (req, res) => {
         success: false,
         error:
           "classId, academicYearId, termId, and attendanceDate (YYYY-MM-DD) are required",
+      });
+    }
+
+    if (!isWeekdayDate(attendanceDate)) {
+      return res.status(400).json({
+        success: false,
+        error: "Attendance can only be marked for Monday to Friday",
       });
     }
 
