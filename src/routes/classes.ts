@@ -240,7 +240,7 @@ router.get("/", async (req, res) => {
       .from(classes)
       .leftJoin(staff, eq(classes.supervisorId, staff.id))
       .where(whereClause)
-      .orderBy(desc(classes.createdAt))
+      .orderBy(classes.id)
       .limit(limitPerPage)
       .offset(offset);
 
