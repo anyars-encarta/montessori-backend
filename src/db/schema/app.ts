@@ -13,7 +13,6 @@ import {
   pgEnum,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { string } from "zod";
 
 // ============= ENUMS =============
 export const staffTypeEnum = pgEnum("staff_type", ["teacher", "non_teaching"]);
