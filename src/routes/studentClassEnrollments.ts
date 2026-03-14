@@ -69,6 +69,76 @@ const applyDiscountToAmount = (
   return Math.max(0, discountedAmount).toFixed(2);
 };
 
+const parseClassLevelNumber = (level: string) => {
+  const match = level.match(/(\d+)/);
+  if (!match) return null;
+  const parsed = Number.parseInt(match[1]!, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const toScore = (value: string | number | null | undefined) => {
+  const parsed = Number.parseFloat(String(value ?? "0"));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getLowerClassGrade = (score: number) => {
+  if (score >= 90) return "A+";
+  if (score >= 85) return "A";
+  if (score >= 80) return "A-";
+  if (score >= 75) return "B+";
+  if (score >= 70) return "B";
+  if (score >= 65) return "C+";
+  if (score >= 60) return "C";
+  if (score >= 50) return "D";
+  if (score >= 40) return "E";
+  return "F";
+};
+
+const getLowerClassRemark = (score: number) => {
+  if (score >= 90) return "HIGHEST";
+  if (score >= 85) return "HIGHER";
+  if (score >= 80) return "HIGH";
+  if (score >= 75) return "HIGH AVERAGE";
+  if (score >= 70) return "AVERAGE";
+  if (score >= 65) return "LOW AVERAGE";
+  if (score >= 60) return "LOW";
+  if (score >= 50) return "LOWER";
+  if (score >= 40) return "LOWEST";
+  return "LOWEST";
+};
+
+const getUpperClassRemark = (score: number) => {
+  if (score >= 90) return "EXCELLENT";
+  if (score >= 80) return "VERY GOOD";
+  if (score >= 70) return "HIGH";
+  if (score >= 60) return "HIGH AVERAGE";
+  if (score >= 55) return "AVERAGE";
+  if (score >= 50) return "LOW AVERAGE";
+  if (score >= 40) return "LOW";
+  if (score >= 35) return "CREDIT";
+  return "FAIL";
+};
+
+const getDenseRanks = (rows: Array<{ id: number; score: number }>) => {
+  const sortedRows = [...rows].sort((a, b) => b.score - a.score);
+  const rankById = new Map<number, number>();
+
+  let currentRank = 0;
+  let previousScore: number | null = null;
+
+  for (const row of sortedRows) {
+    const normalizedScore = Number(row.score.toFixed(2));
+    if (previousScore === null || normalizedScore < previousScore) {
+      currentRank += 1;
+      previousScore = normalizedScore;
+    }
+
+    rankById.set(row.id, currentRank);
+  }
+
+  return rankById;
+};
+
 type EnrollmentMode = "admission" | "promotion" | "repeat";
 
 const runEnrollmentWorkflow = async (
@@ -511,6 +581,217 @@ router.get("/overview", async (req, res) => {
     return res
       .status(500)
       .json({ success: false, error: "Failed to fetch class enrollment overview" });
+  }
+});
+
+router.post("/run-grades", async (req, res) => {
+  try {
+    const classId = parsePositiveInt(req.body?.classId);
+    const academicYearId = parsePositiveInt(req.body?.academicYearId);
+    const termId = parsePositiveInt(req.body?.termId);
+
+    if (!classId || !academicYearId || !termId) {
+      return res.status(400).json({
+        success: false,
+        error: "classId, academicYearId and termId are required",
+      });
+    }
+
+    const [classRow] = await db
+      .select({ id: classes.id, level: classes.level })
+      .from(classes)
+      .where(eq(classes.id, classId));
+
+    if (!classRow) {
+      return res.status(404).json({ success: false, error: "Class not found" });
+    }
+
+    const classLevelNumber = parseClassLevelNumber(classRow.level);
+    if (!classLevelNumber) {
+      return res.status(400).json({
+        success: false,
+        error: "Unable to parse class level number. Expected formats like P1, L6, P7.",
+      });
+    }
+
+    const isUpperClass = classLevelNumber > 6;
+
+    const enrollmentRows = await db
+      .select({
+        id: studentClassEnrollments.id,
+        studentId: studentClassEnrollments.studentId,
+      })
+      .from(studentClassEnrollments)
+      .where(
+        and(
+          eq(studentClassEnrollments.classId, classId),
+          eq(studentClassEnrollments.academicYearId, academicYearId),
+          eq(studentClassEnrollments.termId, termId),
+        ),
+      );
+
+    if (!enrollmentRows.length) {
+      return res.status(200).json({
+        success: true,
+        data: {
+          gradedStudents: 0,
+          gradedAssessments: 0,
+          classLevel: classRow.level,
+          mode: isUpperClass ? "upper" : "lower",
+        },
+      });
+    }
+
+    const studentIds = enrollmentRows.map((row) => row.studentId);
+
+    const assessmentRows = await db
+      .select({
+        id: continuousAssessments.id,
+        studentId: continuousAssessments.studentId,
+        subjectId: continuousAssessments.subjectId,
+        totalMark: continuousAssessments.totalMark,
+      })
+      .from(continuousAssessments)
+      .where(
+        and(
+          eq(continuousAssessments.academicYearId, academicYearId),
+          eq(continuousAssessments.termId, termId),
+          inArray(continuousAssessments.studentId, studentIds),
+        ),
+      );
+
+    const subjectPositionByAssessmentId = new Map<number, string>();
+    const subjectRemarkByAssessmentId = new Map<number, string>();
+
+    if (isUpperClass) {
+      const assessmentsBySubject = new Map<number, Array<{ id: number; score: number }>>();
+
+      for (const row of assessmentRows) {
+        const score = toScore(row.totalMark);
+        const existingRows = assessmentsBySubject.get(row.subjectId) ?? [];
+        existingRows.push({ id: row.id, score });
+        assessmentsBySubject.set(row.subjectId, existingRows);
+      }
+
+      for (const rows of assessmentsBySubject.values()) {
+        const ranks = getDenseRanks(rows);
+        for (const row of rows) {
+          const rank = ranks.get(row.id) ?? 0;
+          subjectPositionByAssessmentId.set(row.id, String(rank));
+          subjectRemarkByAssessmentId.set(row.id, getUpperClassRemark(row.score));
+        }
+      }
+    } else {
+      for (const row of assessmentRows) {
+        const score = toScore(row.totalMark);
+        subjectPositionByAssessmentId.set(row.id, getLowerClassGrade(score));
+        subjectRemarkByAssessmentId.set(row.id, getLowerClassRemark(score));
+      }
+    }
+
+    await Promise.all(
+      assessmentRows.map((row) =>
+        db
+          .update(continuousAssessments)
+          .set({
+            subjectPosition: subjectPositionByAssessmentId.get(row.id) ?? null,
+            remarks: subjectRemarkByAssessmentId.get(row.id) ?? null,
+          })
+          .where(eq(continuousAssessments.id, row.id)),
+      ),
+    );
+
+    const statsByStudentId = new Map<
+      number,
+      {
+        totalScore: number;
+        subjectCount: number;
+        upperRanks: number[];
+      }
+    >();
+
+    for (const assessment of assessmentRows) {
+      const current =
+        statsByStudentId.get(assessment.studentId) ??
+        ({ totalScore: 0, subjectCount: 0, upperRanks: [] } as const);
+
+      const score = toScore(assessment.totalMark);
+      const next = {
+        totalScore: current.totalScore + score,
+        subjectCount: current.subjectCount + 1,
+        upperRanks: [...current.upperRanks],
+      };
+
+      if (isUpperClass) {
+        const parsedRank = Number.parseInt(
+          subjectPositionByAssessmentId.get(assessment.id) ?? "",
+          10,
+        );
+        if (Number.isFinite(parsedRank) && parsedRank > 0) {
+          next.upperRanks.push(parsedRank);
+        }
+      }
+
+      statsByStudentId.set(assessment.studentId, next);
+    }
+
+    await Promise.all(
+      enrollmentRows.map(async (enrollment) => {
+        const stats = statsByStudentId.get(enrollment.studentId);
+        if (!stats || stats.subjectCount === 0) {
+          await db
+            .update(studentClassEnrollments)
+            .set({
+              classPosition: null,
+              remarks: null,
+              aggregate: null,
+            })
+            .where(eq(studentClassEnrollments.id, enrollment.id));
+          return;
+        }
+
+        const averageScore = stats.totalScore / stats.subjectCount;
+
+        if (isUpperClass) {
+          const bestSixRanks = [...stats.upperRanks]
+            .sort((a, b) => a - b)
+            .slice(0, 6);
+          const aggregate = bestSixRanks.reduce((sum, rank) => sum + rank, 0);
+
+          await db
+            .update(studentClassEnrollments)
+            .set({
+              classPosition: null,
+              remarks: getUpperClassRemark(averageScore),
+              aggregate: aggregate.toFixed(2),
+            })
+            .where(eq(studentClassEnrollments.id, enrollment.id));
+          return;
+        }
+
+        await db
+          .update(studentClassEnrollments)
+          .set({
+            classPosition: getLowerClassGrade(averageScore),
+            remarks: getLowerClassRemark(averageScore),
+            aggregate: null,
+          })
+          .where(eq(studentClassEnrollments.id, enrollment.id));
+      }),
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        gradedStudents: enrollmentRows.length,
+        gradedAssessments: assessmentRows.length,
+        classLevel: classRow.level,
+        mode: isUpperClass ? "upper" : "lower",
+      },
+    });
+  } catch (error) {
+    console.error("POST /student-class-enrollments/run-grades error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
 
