@@ -1171,6 +1171,44 @@ router.post("/:id/parents", async (req, res) => {
   }
 });
 
+router.put("/:id/parents/:parentId", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const parentId = parsePositiveInt(req.params.parentId);
+    const relationship =
+      typeof req.body?.relationship === "string" && req.body.relationship.trim()
+        ? req.body.relationship.trim()
+        : null;
+
+    if (studentId === null || parentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student or parent id" });
+    }
+
+    const existingRelation = await db
+      .select({ studentId: studentParents.studentId, parentId: studentParents.parentId })
+      .from(studentParents)
+      .where(and(eq(studentParents.studentId, studentId), eq(studentParents.parentId, parentId)));
+
+    if (!existingRelation.length) {
+      return res.status(404).json({ success: false, error: "Student-parent relation not found" });
+    }
+
+    const [updatedRelation] = await db
+      .update(studentParents)
+      .set({ relationship })
+      .where(and(eq(studentParents.studentId, studentId), eq(studentParents.parentId, parentId)))
+      .returning();
+
+    return res.status(200).json({
+      success: true,
+      data: updatedRelation,
+    });
+  } catch (error) {
+    console.error("PUT /students/:id/parents/:parentId error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.delete("/:id/parents/:parentId", async (req, res) => {
   try {
     const studentId = parsePositiveInt(req.params.id);

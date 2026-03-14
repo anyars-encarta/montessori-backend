@@ -15,7 +15,10 @@ const parsePositiveInt = (value: unknown) => {
 
 router.get("/", async (req, res) => {
   try {
-    const data = await db.select().from(parents);
+    const data = await db
+      .select()
+      .from(parents)
+      .orderBy(parents.firstName, parents.lastName);
     res.json({
       success: true,
       data,
@@ -34,8 +37,9 @@ router.get("/:id", async (req, res) => {
     const data = await db
       .select()
       .from(parents)
-      .where(eq(parents.id, parseInt(id)));
-    
+      .where(eq(parents.id, parseInt(id)))
+      .orderBy(parents.firstName, parents.lastName);
+
     if (!data.length) {
       return res.status(404).json({
         success: false,
@@ -59,22 +63,32 @@ router.post("/", async (req, res) => {
   try {
     const { firstName, lastName, email, phone, occupation, address } = req.body;
 
-    const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
+    const trimmedFirstName =
+      typeof firstName === "string" ? firstName.trim() : "";
     const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
     const normalizedEmail =
-      typeof email === "string" && email.trim() ? email.trim().toLowerCase() : null;
-    const normalizedPhone = typeof phone === "string" && phone.trim() ? phone.trim() : null;
+      typeof email === "string" && email.trim()
+        ? email.trim().toLowerCase()
+        : null;
+    const normalizedPhone =
+      typeof phone === "string" && phone.trim() ? phone.trim() : null;
     const normalizedOccupation =
-      typeof occupation === "string" && occupation.trim() ? occupation.trim() : null;
+      typeof occupation === "string" && occupation.trim()
+        ? occupation.trim()
+        : null;
     const normalizedAddress =
       typeof address === "string" && address.trim() ? address.trim() : null;
 
     if (!trimmedFirstName) {
-      return res.status(400).json({ success: false, error: "firstName is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "firstName is required" });
     }
 
     if (!trimmedLastName) {
-      return res.status(400).json({ success: false, error: "lastName is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "lastName is required" });
     }
 
     const [createdParent] = await db
@@ -111,7 +125,9 @@ router.post("/", async (req, res) => {
     }
 
     console.error("POST /parents error:", error);
-    return res.status(500).json({ success: false, error: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal Server Error" });
   }
 });
 
@@ -121,25 +137,37 @@ router.put("/:id", async (req, res) => {
     const { firstName, lastName, email, phone, occupation, address } = req.body;
 
     if (parentId === null) {
-      return res.status(400).json({ success: false, error: "Invalid parent id" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid parent id" });
     }
 
-    const trimmedFirstName = typeof firstName === "string" ? firstName.trim() : "";
+    const trimmedFirstName =
+      typeof firstName === "string" ? firstName.trim() : "";
     const trimmedLastName = typeof lastName === "string" ? lastName.trim() : "";
     const normalizedEmail =
-      typeof email === "string" && email.trim() ? email.trim().toLowerCase() : null;
-    const normalizedPhone = typeof phone === "string" && phone.trim() ? phone.trim() : null;
+      typeof email === "string" && email.trim()
+        ? email.trim().toLowerCase()
+        : null;
+    const normalizedPhone =
+      typeof phone === "string" && phone.trim() ? phone.trim() : null;
     const normalizedOccupation =
-      typeof occupation === "string" && occupation.trim() ? occupation.trim() : null;
+      typeof occupation === "string" && occupation.trim()
+        ? occupation.trim()
+        : null;
     const normalizedAddress =
       typeof address === "string" && address.trim() ? address.trim() : null;
 
     if (!trimmedFirstName) {
-      return res.status(400).json({ success: false, error: "firstName is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "firstName is required" });
     }
 
     if (!trimmedLastName) {
-      return res.status(400).json({ success: false, error: "lastName is required" });
+      return res
+        .status(400)
+        .json({ success: false, error: "lastName is required" });
     }
 
     const existingParent = await db
@@ -148,7 +176,9 @@ router.put("/:id", async (req, res) => {
       .where(eq(parents.id, parentId));
 
     if (!existingParent.length) {
-      return res.status(404).json({ success: false, error: "Parent not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Parent not found" });
     }
 
     const [updatedParent] = await db
@@ -180,7 +210,9 @@ router.put("/:id", async (req, res) => {
     }
 
     console.error("PUT /parents/:id error:", error);
-    return res.status(500).json({ success: false, error: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal Server Error" });
   }
 });
 
@@ -189,7 +221,9 @@ router.delete("/:id", async (req, res) => {
     const parentId = parsePositiveInt(req.params.id);
 
     if (parentId === null) {
-      return res.status(400).json({ success: false, error: "Invalid parent id" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid parent id" });
     }
 
     const existingParent = await db
@@ -198,7 +232,9 @@ router.delete("/:id", async (req, res) => {
       .where(eq(parents.id, parentId));
 
     if (!existingParent.length) {
-      return res.status(404).json({ success: false, error: "Parent not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Parent not found" });
     }
 
     await db.delete(parents).where(eq(parents.id, parentId));
@@ -218,7 +254,9 @@ router.delete("/:id", async (req, res) => {
     }
 
     console.error("DELETE /parents/:id error:", error);
-    return res.status(500).json({ success: false, error: "Internal Server Error" });
+    return res
+      .status(500)
+      .json({ success: false, error: "Internal Server Error" });
   }
 });
 
