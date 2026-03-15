@@ -73,6 +73,7 @@ router.post("/", async (req, res) => {
     const lastName = normalizeOptionalText(req.body?.lastName);
     const email = normalizeOptionalText(req.body?.email);
     const phone = normalizeOptionalText(req.body?.phone);
+    const address = normalizeOptionalText(req.body?.address);
     const dateOfBirth = normalizeOptionalText(req.body?.dateOfBirth);
     const gender = req.body?.gender;
     const staffType = req.body?.staffType;
@@ -190,6 +191,7 @@ router.post("/", async (req, res) => {
         lastName,
         email,
         phone,
+        address,
         dateOfBirth,
         gender,
         staffType,
@@ -476,6 +478,7 @@ router.put("/:id", async (req, res) => {
       lastName?: string;
       email?: string | null;
       phone?: string | null;
+      address?: string | null;
       dateOfBirth?: string | null;
       gender?: "male" | "female" | "other";
       staffType?: "teacher" | "non_teaching";
@@ -523,6 +526,10 @@ router.put("/:id", async (req, res) => {
 
     if (req.body?.phone !== undefined) {
       updates.phone = normalizeOptionalText(req.body.phone);
+    }
+
+    if (req.body?.address !== undefined) {
+      updates.address = normalizeOptionalText(req.body.address);
     }
 
     if (req.body?.dateOfBirth !== undefined) {

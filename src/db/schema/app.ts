@@ -66,6 +66,7 @@ export const staff = pgTable("staff", {
   lastName: varchar("last_name", { length: 100 }).notNull(),
   email: varchar("email", { length: 255 }).unique(),
   phone: varchar("phone", { length: 20 }),
+  address: text("address"),
   dateOfBirth: date("date_of_birth"),
   gender: genderEnum("gender").notNull(),
   staffType: staffTypeEnum("staff_type").notNull(),

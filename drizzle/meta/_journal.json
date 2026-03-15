@@ -43,6 +43,13 @@
       "when": 1773500000000,
       "tag": "0005_awesome_fee_type_update",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1773586336386,
+      "tag": "0006_old_tempest",
+      "breakpoints": true
     }
   ]
 }
