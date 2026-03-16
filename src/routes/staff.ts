@@ -437,6 +437,16 @@ router.get("/:id", async (req, res) => {
       .select()
       .from(staff)
       .where(eq(staff.id, staffId));
+
+    const subjectRows = await db
+      .select({
+        staffId: staffSubjects.staffId,
+        subjectId: staffSubjects.subjectId,
+        subject: subjects,
+      })
+      .from(staffSubjects)
+      .leftJoin(subjects, eq(staffSubjects.subjectId, subjects.id))
+      .where(eq(staffSubjects.staffId, staffId));
     
     if (!data.length) {
       return res.status(404).json({
@@ -447,7 +457,10 @@ router.get("/:id", async (req, res) => {
 
     res.json({
       success: true,
-      data: data[0],
+      data: {
+        ...data[0],
+        subjects: subjectRows,
+      },
     });
   } catch (error) {
     res.status(500).json({
