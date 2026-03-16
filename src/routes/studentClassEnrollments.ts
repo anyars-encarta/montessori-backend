@@ -76,6 +76,11 @@ const parseClassLevelNumber = (level: string) => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
+const normalizeLevel = (value: string | null | undefined) => {
+  if (value === null || value === undefined) return "";
+  return value.trim().toLowerCase();
+};
+
 const toScore = (value: string | number | null | undefined) => {
   const parsed = Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(parsed) ? parsed : 0;
@@ -228,6 +233,7 @@ const runEnrollmentWorkflow = async (
     .select({
       id: studentClassEnrollments.id,
       academicYearId: studentClassEnrollments.academicYearId,
+      termId: studentClassEnrollments.termId,
       createdAt: studentClassEnrollments.createdAt,
     })
     .from(studentClassEnrollments)
@@ -248,14 +254,15 @@ const runEnrollmentWorkflow = async (
     };
   }
 
-  const existingSameYear = existingEnrollments.find(
-    (enrollment) => enrollment.academicYearId === academicYearId,
+  const existingSameYearTerm = existingEnrollments.find(
+    (enrollment) =>
+      enrollment.academicYearId === academicYearId && enrollment.termId === termId,
   );
 
-  if (existingSameYear) {
+  if (existingSameYearTerm) {
     return {
       status: 409,
-      error: "Student already has an enrollment for the selected academic year" as const,
+      error: "Student already has an enrollment for the selected academic year and term" as const,
     };
   }
 
@@ -291,17 +298,26 @@ const runEnrollmentWorkflow = async (
       feeType: fees.feeType,
       applicableToLevel: fees.applicableToLevel,
     })
-    .from(fees);
+    .from(fees)
+    .where(eq(fees.academicYearId, academicYearId));
+
+  const selectedClassLevel = normalizeLevel(selectedClass.level);
 
   const applicableFees = feeRows.filter((fee) => {
-    const isLevelFee = fee.applicableToLevel === selectedClass.level;
-    const isAdmissionFee = fee.feeType === "admission";
+    const feeLevel = normalizeLevel(fee.applicableToLevel);
+    const isAllLevelsFee = feeLevel === "";
+    const isLevelFee = feeLevel === selectedClassLevel;
+    const isClassApplicableFee = isAllLevelsFee || isLevelFee;
 
-    if (mode === "admission") {
-      return isAdmissionFee || isLevelFee;
+    if (!isClassApplicableFee) {
+      return false;
     }
 
-    return !isAdmissionFee && isLevelFee;
+    if (mode === "admission") {
+      return true;
+    }
+
+    return fee.feeType !== "admission";
   });
 
   const existingStudentFeeRows = await db

@@ -297,7 +297,11 @@ export const studentClassEnrollments = pgTable(
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
-    idx: uniqueIndex("idx_student_class_year").on(table.studentId, table.academicYearId),
+    idx: uniqueIndex("idx_student_class_year_term").on(
+      table.studentId,
+      table.academicYearId,
+      table.termId,
+    ),
   })
 );
 
