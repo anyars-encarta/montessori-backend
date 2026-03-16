@@ -170,8 +170,6 @@ const getDenseRanks = (
   return rankById;
 };
 
-type EnrollmentMode = "admission" | "promotion" | "repeat";
-
 const runEnrollmentWorkflow = async (
   mode: EnrollmentMode,
   payload: {

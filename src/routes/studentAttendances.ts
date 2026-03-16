@@ -37,12 +37,6 @@ const isAttendanceStatus = (value: unknown): value is "present" | "absent" => {
   return value === "present" || value === "absent";
 };
 
-type NormalizedAttendanceEntry = {
-  studentId: number | null;
-  status: unknown;
-  remarks: string | null;
-};
-
 router.get("/daily-register", async (req, res) => {
   try {
     const classId = parsePositiveInt(req.query.classId);
