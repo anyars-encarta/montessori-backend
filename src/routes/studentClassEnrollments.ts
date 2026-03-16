@@ -296,7 +296,9 @@ const runEnrollmentWorkflow = async (
       name: fees.name,
       amount: fees.amount,
       feeType: fees.feeType,
+      applicableTermId: fees.applicableTermId,
       applicableToLevel: fees.applicableToLevel,
+      applyOnce: fees.applyOnce,
     })
     .from(fees)
     .where(eq(fees.academicYearId, academicYearId));
@@ -308,8 +310,9 @@ const runEnrollmentWorkflow = async (
     const isAllLevelsFee = feeLevel === "";
     const isLevelFee = feeLevel === selectedClassLevel;
     const isClassApplicableFee = isAllLevelsFee || isLevelFee;
+    const isTermApplicable = fee.applicableTermId === null || fee.applicableTermId === termId;
 
-    if (!isClassApplicableFee) {
+    if (!isClassApplicableFee || !isTermApplicable) {
       return false;
     }
 
@@ -331,7 +334,22 @@ const runEnrollmentWorkflow = async (
       ),
     );
 
+  const applicableFeeIds = applicableFees.map((fee) => fee.id);
+
+  const existingAnyTermFeeRows = applicableFeeIds.length
+    ? await db
+        .select({ feeId: studentFees.feeId })
+        .from(studentFees)
+        .where(
+          and(
+            eq(studentFees.studentId, studentId),
+            inArray(studentFees.feeId, applicableFeeIds),
+          ),
+        )
+    : [];
+
   const existingStudentFeeIds = new Set(existingStudentFeeRows.map((row) => row.feeId));
+  const existingAnyTermFeeIds = new Set(existingAnyTermFeeRows.map((row) => row.feeId));
 
   const shouldSkipPromotionFees = mode !== "admission" && selectedStudent.onScholarship;
   const shouldApplyPromotionDiscount =
@@ -363,6 +381,7 @@ const runEnrollmentWorkflow = async (
 
   const feeAssignments = applicableFees
     .filter((fee) => !existingStudentFeeIds.has(fee.id))
+    .filter((fee) => !(fee.applyOnce && existingAnyTermFeeIds.has(fee.id)))
     .filter(() => !shouldSkipPromotionFees)
     .map((fee) => ({
       studentId,
@@ -384,6 +403,7 @@ const runEnrollmentWorkflow = async (
 
   const feeNamesApplied = applicableFees
     .filter((fee) => !existingStudentFeeIds.has(fee.id))
+    .filter((fee) => !(fee.applyOnce && existingAnyTermFeeIds.has(fee.id)))
     .map((fee) => fee.name);
 
   if (feeAssignments.length) {

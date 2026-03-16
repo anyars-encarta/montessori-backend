@@ -1,7 +1,7 @@
 import express from "express";
 import { and, desc, eq, ilike, sql } from "drizzle-orm";
 import { db } from "../db";
-import { academicYears, fees } from "../db/schema";
+import { academicYears, fees, terms } from "../db/schema";
 
 const router = express.Router();
 
@@ -32,6 +32,30 @@ const parseMoneyString = (value: unknown) => {
   return parsed.toFixed(2);
 };
 
+const parseOptionalBoolean = (value: unknown): boolean | null => {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  if (typeof value === "boolean") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "true") return true;
+    if (normalized === "false") return false;
+  }
+
+  return null;
+};
+
+const parseNullablePositiveInt = (value: unknown): number | null | undefined => {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  return parsePositiveInt(value);
+};
+
 const isFeeType = (
   value: unknown,
 ): value is "admission" | "tuition" | "feeding" | "other" => {
@@ -56,6 +80,7 @@ router.get("/", async (req, res) => {
         ? req.query.applicableToLevel.trim()
         : "";
     const academicYearIdFilter = parsePositiveInt(req.query.academicYearId);
+    const applicableTermIdFilter = parsePositiveInt(req.query.applicableTermId);
 
     const conditions = [];
 
@@ -73,6 +98,10 @@ router.get("/", async (req, res) => {
 
     if (academicYearIdFilter) {
       conditions.push(eq(fees.academicYearId, academicYearIdFilter));
+    }
+
+    if (applicableTermIdFilter) {
+      conditions.push(eq(fees.applicableTermId, applicableTermIdFilter));
     }
 
     const whereClause = conditions.length ? and(...conditions) : undefined;
@@ -93,7 +122,9 @@ router.get("/", async (req, res) => {
         amount: fees.amount,
         feeType: fees.feeType,
         academicYearId: fees.academicYearId,
+        applicableTermId: fees.applicableTermId,
         applicableToLevel: fees.applicableToLevel,
+        applyOnce: fees.applyOnce,
         createdAt: fees.createdAt,
         updatedAt: fees.updatedAt,
       })
@@ -161,7 +192,9 @@ router.post("/", async (req, res) => {
     const description = normalizeOptionalText(req.body?.description);
     const amount = parseMoneyString(req.body?.amount);
     const academicYearId = parsePositiveInt(req.body?.academicYearId);
+    const applicableTermId = parseNullablePositiveInt(req.body?.applicableTermId);
     const applicableToLevel = normalizeOptionalText(req.body?.applicableToLevel);
+    const applyOnce = parseOptionalBoolean(req.body?.applyOnce) ?? false;
     const feeType = req.body?.feeType;
 
     console.log("Creating fee with data:", {
@@ -170,7 +203,9 @@ router.post("/", async (req, res) => {
       amount,
       feeType,
       academicYearId,
+      applicableTermId,
       applicableToLevel,
+      applyOnce,
     });
     
     if (!name) {
@@ -192,6 +227,20 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (req.body?.applyOnce !== undefined && parseOptionalBoolean(req.body?.applyOnce) === null) {
+      return res.status(400).json({
+        success: false,
+        error: "applyOnce must be a boolean",
+      });
+    }
+
+    if (applicableTermId === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: "applicableTermId must be a positive integer or null",
+      });
+    }
+
     const [academicYear] = await db
       .select({ id: academicYears.id })
       .from(academicYears)
@@ -204,6 +253,27 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (applicableTermId !== null) {
+      const [term] = await db
+        .select({ id: terms.id, academicYearId: terms.academicYearId })
+        .from(terms)
+        .where(eq(terms.id, applicableTermId));
+
+      if (!term) {
+        return res.status(400).json({
+          success: false,
+          error: "applicableTermId does not reference an existing term",
+        });
+      }
+
+      if (term.academicYearId !== academicYearId) {
+        return res.status(400).json({
+          success: false,
+          error: "applicableTermId must belong to the selected academic year",
+        });
+      }
+    }
+
     const [createdFee] = await db
       .insert(fees)
       .values({
@@ -212,7 +282,9 @@ router.post("/", async (req, res) => {
         amount,
         feeType,
         academicYearId,
+        applicableTermId,
         applicableToLevel,
+        applyOnce,
       })
       .returning();
 
@@ -240,7 +312,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const [existingFee] = await db
-      .select({ id: fees.id })
+      .select({ id: fees.id, academicYearId: fees.academicYearId, applicableTermId: fees.applicableTermId })
       .from(fees)
       .where(eq(fees.id, id));
 
@@ -255,6 +327,8 @@ router.put("/:id", async (req, res) => {
       feeType?: "admission" | "tuition" | "feeding" | "other";
       academicYearId?: number;
       applicableToLevel?: string | null;
+      applicableTermId?: number | null;
+      applyOnce?: boolean;
       updatedAt?: Date;
     } = {};
 
@@ -315,8 +389,57 @@ router.put("/:id", async (req, res) => {
       updates.academicYearId = academicYearId;
     }
 
+    if (req.body?.applicableTermId !== undefined) {
+      const applicableTermId = parseNullablePositiveInt(req.body.applicableTermId);
+      if (applicableTermId === undefined) {
+        return res.status(400).json({
+          success: false,
+          error: "applicableTermId must be a positive integer or null",
+        });
+      }
+      updates.applicableTermId = applicableTermId;
+    }
+
+    if (req.body?.applyOnce !== undefined) {
+      const applyOnce = parseOptionalBoolean(req.body.applyOnce);
+      if (applyOnce === null) {
+        return res.status(400).json({
+          success: false,
+          error: "applyOnce must be a boolean",
+        });
+      }
+      updates.applyOnce = applyOnce;
+    }
+
     if (req.body?.applicableToLevel !== undefined) {
       updates.applicableToLevel = normalizeOptionalText(req.body.applicableToLevel);
+    }
+
+    const resolvedAcademicYearId = updates.academicYearId ?? existingFee.academicYearId;
+    const resolvedApplicableTermId =
+      updates.applicableTermId !== undefined
+        ? updates.applicableTermId
+        : existingFee.applicableTermId;
+
+    if (resolvedApplicableTermId !== null) {
+      const [term] = await db
+        .select({ id: terms.id, academicYearId: terms.academicYearId })
+        .from(terms)
+        .where(eq(terms.id, resolvedApplicableTermId));
+
+      if (!term) {
+        return res.status(400).json({
+          success: false,
+          error: "applicableTermId does not reference an existing term",
+        });
+      }
+
+      if (term.academicYearId !== resolvedAcademicYearId) {
+        return res.status(400).json({
+          success: false,
+          error: "applicableTermId must belong to the selected academic year",
+        });
+      }
     }
 
     if (!Object.keys(updates).length) {

@@ -379,7 +379,9 @@ export const fees = pgTable("fees", {
   academicYearId: integer("academic_year_id")
     .notNull()
     .references(() => academicYears.id),
+  applicableTermId: integer("applicable_term_id").references(() => terms.id),
   applicableToLevel: varchar("applicable_to_level", { length: 50 }), // Class level the fee applies to
+  applyOnce: boolean("apply_once").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -526,6 +528,7 @@ export const termsRelations = relations(terms, ({ one, many }) => ({
   assessments: many(continuousAssessments),
   positions: many(positions),
   studentFees: many(studentFees),
+  fees: many(fees),
 }));
 
 export const staffRelations = relations(staff, ({ many, one }) => ({
@@ -697,6 +700,10 @@ export const feesRelations = relations(fees, ({ one, many }) => ({
   academicYear: one(academicYears, {
     fields: [fees.academicYearId],
     references: [academicYears.id],
+  }),
+  applicableTerm: one(terms, {
+    fields: [fees.applicableTermId],
+    references: [terms.id],
   }),
   studentFees: many(studentFees),
 }));

@@ -57,6 +57,13 @@
       "when": 1773657600000,
       "tag": "0007_term_unique_enrollment",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1773660600000,
+      "tag": "0008_fee_once_and_term_scope",
+      "breakpoints": true
     }
   ]
 }
