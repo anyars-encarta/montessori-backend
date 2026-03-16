@@ -1115,6 +1115,105 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/:id/parents/create-attach", async (req, res) => {
+  try {
+    const studentId = parsePositiveInt(req.params.id);
+    const relationship =
+      typeof req.body?.relationship === "string" && req.body.relationship.trim()
+        ? req.body.relationship.trim()
+        : null;
+
+    const firstName = typeof req.body?.firstName === "string" ? req.body.firstName.trim() : "";
+    const lastName = typeof req.body?.lastName === "string" ? req.body.lastName.trim() : "";
+    const email =
+      typeof req.body?.email === "string" && req.body.email.trim()
+        ? req.body.email.trim().toLowerCase()
+        : null;
+    const phone =
+      typeof req.body?.phone === "string" && req.body.phone.trim() ? req.body.phone.trim() : null;
+    const occupation =
+      typeof req.body?.occupation === "string" && req.body.occupation.trim()
+        ? req.body.occupation.trim()
+        : null;
+    const address =
+      typeof req.body?.address === "string" && req.body.address.trim() ? req.body.address.trim() : null;
+
+    if (studentId === null) {
+      return res.status(400).json({ success: false, error: "Invalid student id" });
+    }
+
+    if (!firstName) {
+      return res.status(400).json({ success: false, error: "firstName is required" });
+    }
+
+    if (!lastName) {
+      return res.status(400).json({ success: false, error: "lastName is required" });
+    }
+
+    const studentExists = await db
+      .select({ id: students.id })
+      .from(students)
+      .where(eq(students.id, studentId));
+
+    if (!studentExists.length) {
+      return res.status(404).json({ success: false, error: "Student not found" });
+    }
+
+    const result = await db.transaction(async (tx) => {
+      const [createdParent] = await tx
+        .insert(parents)
+        .values({
+          firstName,
+          lastName,
+          email,
+          phone,
+          occupation,
+          address,
+        })
+        .returning();
+
+      if (!createdParent) {
+        throw new Error("Failed to create parent");
+      }
+
+      const [createdRelation] = await tx
+        .insert(studentParents)
+        .values({
+          studentId,
+          parentId: createdParent.id,
+          relationship,
+        })
+        .returning();
+
+      if (!createdRelation) {
+        throw new Error("Failed to create student-parent relation");
+      }
+
+      return {
+        parent: createdParent,
+        relation: createdRelation,
+      };
+    });
+
+    return res.status(201).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    const dbError = error as { code?: string };
+
+    if (dbError.code === "23505") {
+      return res.status(409).json({
+        success: false,
+        error: "A parent with this email already exists",
+      });
+    }
+
+    console.error("POST /students/:id/parents/create-attach error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
 router.post("/:id/parents", async (req, res) => {
   try {
     const studentId = parsePositiveInt(req.params.id);
