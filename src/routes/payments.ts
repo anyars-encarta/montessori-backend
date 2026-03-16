@@ -1,5 +1,5 @@
 import express from "express";
-import { and, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, lte, ne, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import { payments, studentFees, students } from "../db/schema";
 
@@ -106,6 +106,42 @@ const reconcileStudentFeePayment = async (studentFeeId: number) => {
     .where(eq(studentFees.id, studentFeeId));
 };
 
+const getRemainingStudentFeeBalance = async (
+  studentFeeId: number,
+  excludedPaymentId?: number,
+) => {
+  const [feeRow] = await db
+    .select({
+      id: studentFees.id,
+      amount: studentFees.amount,
+    })
+    .from(studentFees)
+    .where(eq(studentFees.id, studentFeeId));
+
+  if (!feeRow) {
+    return null;
+  }
+
+  const paymentConditions = [eq(payments.studentFeeId, studentFeeId)];
+  if (excludedPaymentId !== undefined) {
+    paymentConditions.push(ne(payments.id, excludedPaymentId));
+  }
+
+  const paymentRows = await db
+    .select({ totalPaid: sql<string>`COALESCE(SUM(${payments.amount}), 0)` })
+    .from(payments)
+    .where(and(...paymentConditions));
+
+  const totalAmount = Number.parseFloat(String(feeRow.amount));
+  const totalPaid = Number.parseFloat(String(paymentRows[0]?.totalPaid ?? "0"));
+
+  if (!Number.isFinite(totalAmount)) {
+    return null;
+  }
+
+  return Math.max(0, totalAmount - (Number.isFinite(totalPaid) ? totalPaid : 0));
+};
+
 router.get("/yearly-summary", async (req, res) => {
   try {
     const currentYear = new Date().getFullYear();
@@ -154,12 +190,27 @@ router.get("/yearly-summary", async (req, res) => {
 
 router.get("/", async (req, res) => {
   try {
+    const currentPage = Math.max(1, parsePositiveInt(req.query.page) ?? 1);
+    const limitPerPage = Math.min(Math.max(1, parsePositiveInt(req.query.limit) ?? 10), 100);
+    const offset = (currentPage - 1) * limitPerPage;
+
+    const searchFilter = typeof req.query.search === "string" ? req.query.search.trim() : "";
     const studentIdFilter = parsePositiveInt(req.query.studentId);
     const studentFeeIdFilter = parsePositiveInt(req.query.studentFeeId);
     const startDateFilter = parseDateInput(req.query.startDate);
     const endDateFilter = parseDateInput(req.query.endDate);
 
     const conditions = [];
+    if (searchFilter) {
+      conditions.push(
+        or(
+          ilike(students.firstName, `%${searchFilter}%`),
+          ilike(students.lastName, `%${searchFilter}%`),
+          sql`concat(${students.firstName}, ' ', ${students.lastName}) ILIKE ${`%${searchFilter}%`}`,
+          sql`${students.registrationNumber} ILIKE ${`%${searchFilter}%`}`,
+        ),
+      );
+    }
     if (studentIdFilter) {
       conditions.push(eq(payments.studentId, studentIdFilter));
     }
@@ -175,6 +226,15 @@ router.get("/", async (req, res) => {
 
     const whereClause = conditions.length ? and(...conditions) : undefined;
 
+    const countRows = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(payments)
+      .innerJoin(students, eq(payments.studentId, students.id))
+      .where(whereClause);
+
+    const total = Number(countRows[0]?.count ?? 0);
+    const totalPages = total ? Math.ceil(total / limitPerPage) : 0;
+
     const data = await db
       .select({
         id: payments.id,
@@ -188,12 +248,21 @@ router.get("/", async (req, res) => {
         createdAt: payments.createdAt,
       })
       .from(payments)
+      .innerJoin(students, eq(payments.studentId, students.id))
       .where(whereClause)
+      .limit(limitPerPage)
+      .offset(offset)
       .orderBy(desc(payments.createdAt));
 
     res.json({
       success: true,
       data,
+      pagination: {
+        page: currentPage,
+        limit: limitPerPage,
+        total,
+        totalPages,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -303,6 +372,22 @@ router.post("/", async (req, res) => {
           error: "studentFeeId does not belong to the selected student",
         });
       }
+
+      const remainingBalance = await getRemainingStudentFeeBalance(studentFeeId);
+      const paymentAmount = Number.parseFloat(amount);
+      if (remainingBalance === null) {
+        return res.status(404).json({
+          success: false,
+          error: "Student fee not found",
+        });
+      }
+
+      if (paymentAmount - remainingBalance > 0.0001) {
+        return res.status(400).json({
+          success: false,
+          error: `Payment amount exceeds the outstanding balance of ${remainingBalance.toFixed(2)}`,
+        });
+      }
     }
 
     const [createdPayment] = await db
@@ -350,6 +435,7 @@ router.put("/:id", async (req, res) => {
         id: payments.id,
         studentId: payments.studentId,
         studentFeeId: payments.studentFeeId,
+        amount: payments.amount,
       })
       .from(payments)
       .where(eq(payments.id, id));
@@ -464,6 +550,26 @@ router.put("/:id", async (req, res) => {
           error: "studentFeeId does not belong to the selected student",
         });
       }
+
+      const remainingBalance = await getRemainingStudentFeeBalance(
+        resolvedStudentFeeId,
+        id,
+      );
+      const nextAmount = Number.parseFloat(updates.amount ?? String(existingPayment.amount));
+
+      if (remainingBalance === null) {
+        return res.status(404).json({
+          success: false,
+          error: "Student fee not found",
+        });
+      }
+
+      if (nextAmount - remainingBalance > 0.0001) {
+        return res.status(400).json({
+          success: false,
+          error: `Payment amount exceeds the outstanding balance of ${remainingBalance.toFixed(2)}`,
+        });
+      }
     }
 
     const [updatedPayment] = await db
@@ -475,7 +581,7 @@ router.put("/:id", async (req, res) => {
     if (existingPayment.studentFeeId !== null) {
       await reconcileStudentFeePayment(existingPayment.studentFeeId);
     }
-    if (resolvedStudentFeeId !== null && resolvedStudentFeeId !== existingPayment.studentFeeId) {
+    if (resolvedStudentFeeId !== null) {
       await reconcileStudentFeePayment(resolvedStudentFeeId);
     }
 
