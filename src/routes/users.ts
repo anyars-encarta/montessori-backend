@@ -1,7 +1,8 @@
 import express from "express";
 import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { user } from "../db/schema/index.js";
+import { account, user } from "../db/schema/index.js";
+import { hashPassword } from "better-auth/crypto";
 
 const router = express.Router();
 
@@ -120,13 +121,14 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// PUT /api/users/:id - update a user's name, role, and image
+// PUT /api/users/:id - update a user's name, email, role, image, and optionally password
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    const isSelf = req.user?.id === id;
 
     const [found] = await db
-      .select({ id: user.id })
+      .select({ id: user.id, email: user.email })
       .from(user)
       .where(eq(user.id, id))
       .limit(1);
@@ -135,41 +137,77 @@ router.put("/:id", async (req, res) => {
       return res.status(404).json({ success: false, error: "User not found." });
     }
 
+    // --- name ---
     const nameRaw = req.body?.name;
     const name =
       typeof nameRaw === "string" && nameRaw.trim() ? nameRaw.trim() : null;
-
     if (!name) {
       return res
         .status(400)
         .json({ success: false, error: "name is required." });
     }
 
+    // --- email ---
+    const emailRaw = req.body?.email;
+    const newEmail =
+      typeof emailRaw === "string" && emailRaw.trim()
+        ? emailRaw.trim().toLowerCase()
+        : null;
+    if (!newEmail) {
+      return res
+        .status(400)
+        .json({ success: false, error: "email is required." });
+    }
+    const emailChanged = newEmail !== found.email;
+    if (emailChanged) {
+      const [existing] = await db
+        .select({ id: user.id })
+        .from(user)
+        .where(eq(user.email, newEmail))
+        .limit(1);
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          error: "Email is already in use by another account.",
+        });
+      }
+    }
+
+    // --- role (skip for self-edits) ---
     const roleRaw = req.body?.role;
     const role = isValidRole(roleRaw) ? roleRaw : null;
-
-    if (!role) {
+    if (!isSelf && !role) {
       return res.status(400).json({
         success: false,
         error: "role must be one of: admin, teacher, student.",
       });
     }
 
+    // --- image ---
     const image =
       typeof req.body?.image === "string" && req.body.image.trim()
         ? req.body.image.trim()
         : null;
-
     const imageCldPubId =
-      typeof req.body?.imageCldPubId === "string" && req.body.imageCldPubId.trim()
+      typeof req.body?.imageCldPubId === "string" &&
+      req.body.imageCldPubId.trim()
         ? req.body.imageCldPubId.trim()
         : null;
 
+    // --- password (optional) ---
+    const passwordRaw = req.body?.password;
+    const plainPassword =
+      typeof passwordRaw === "string" && passwordRaw.trim()
+        ? passwordRaw.trim()
+        : null;
+
+    // Update user table
     const [updated] = await db
       .update(user)
       .set({
         name,
-        role,
+        ...(emailChanged ? { email: newEmail, emailVerified: false } : {}),
+        ...(!isSelf && role ? { role } : {}),
         image,
         imageCldPubId,
         updatedAt: new Date(),
@@ -186,6 +224,20 @@ router.put("/:id", async (req, res) => {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       });
+
+    // Update account table if email or password changed
+    if (emailChanged || plainPassword) {
+      const accountSetData: { accountId?: string; password?: string } = {};
+      if (emailChanged) accountSetData.accountId = newEmail;
+      if (plainPassword)
+        accountSetData.password = await hashPassword(plainPassword);
+      await db
+        .update(account)
+        .set(accountSetData)
+        .where(
+          and(eq(account.userId, id), eq(account.providerId, "credential")),
+        );
+    }
 
     return res.json({ success: true, data: updated });
   } catch (error) {
