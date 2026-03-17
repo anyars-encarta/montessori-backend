@@ -1,0 +1,229 @@
+import express from "express";
+import { and, asc, count, desc, eq, ilike, or } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { user } from "../db/schema/index.js";
+
+const router = express.Router();
+
+const parsePositiveInt = (value: unknown) => {
+  const parsed = Number.parseInt(String(value), 10);
+  if (Number.isNaN(parsed) || parsed < 1) return null;
+  return parsed;
+};
+
+const isValidRole = (value: unknown): value is "student" | "teacher" | "admin" => {
+  return value === "student" || value === "teacher" || value === "admin";
+};
+
+// GET /api/users - list users with pagination, search, role filter
+router.get("/", async (req, res) => {
+  try {
+    const page = parsePositiveInt(req.query.page) ?? 1;
+    const limit = parsePositiveInt(req.query.limit) ?? 10;
+    const offset = (page - 1) * limit;
+
+    const searchRaw = req.query.search;
+    const search =
+      typeof searchRaw === "string" && searchRaw.trim() ? searchRaw.trim() : null;
+
+    const roleRaw = req.query.role;
+    const role = isValidRole(roleRaw) ? roleRaw : null;
+
+    const conditions = [];
+
+    if (search) {
+      conditions.push(
+        or(
+          ilike(user.name, `%${search}%`),
+          ilike(user.email, `%${search}%`),
+        ),
+      );
+    }
+
+    if (role) {
+      conditions.push(eq(user.role, role));
+    }
+
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    const [rows, totalRows] = await Promise.all([
+      db
+        .select({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          emailVerified: user.emailVerified,
+          image: user.image,
+          imageCldPubId: user.imageCldPubId,
+          role: user.role,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        })
+        .from(user)
+        .where(where)
+        .orderBy(desc(user.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ total: count() })
+        .from(user)
+        .where(where),
+    ]);
+
+    const total = Number(totalRows[0]?.total ?? 0);
+
+    return res.json({
+      success: true,
+      data: rows,
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error("GET /api/users error:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch users." });
+  }
+});
+
+// GET /api/users/:id - get single user
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [found] = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        image: user.image,
+        imageCldPubId: user.imageCldPubId,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+
+    if (!found) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    return res.json({ success: true, data: found });
+  } catch (error) {
+    console.error("GET /api/users/:id error:", error);
+    return res.status(500).json({ success: false, error: "Failed to fetch user." });
+  }
+});
+
+// PUT /api/users/:id - update a user's name, role, and image
+router.put("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [found] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+
+    if (!found) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    const nameRaw = req.body?.name;
+    const name =
+      typeof nameRaw === "string" && nameRaw.trim() ? nameRaw.trim() : null;
+
+    if (!name) {
+      return res
+        .status(400)
+        .json({ success: false, error: "name is required." });
+    }
+
+    const roleRaw = req.body?.role;
+    const role = isValidRole(roleRaw) ? roleRaw : null;
+
+    if (!role) {
+      return res.status(400).json({
+        success: false,
+        error: "role must be one of: admin, teacher, student.",
+      });
+    }
+
+    const image =
+      typeof req.body?.image === "string" && req.body.image.trim()
+        ? req.body.image.trim()
+        : null;
+
+    const imageCldPubId =
+      typeof req.body?.imageCldPubId === "string" && req.body.imageCldPubId.trim()
+        ? req.body.imageCldPubId.trim()
+        : null;
+
+    const [updated] = await db
+      .update(user)
+      .set({
+        name,
+        role,
+        image,
+        imageCldPubId,
+        updatedAt: new Date(),
+      })
+      .where(eq(user.id, id))
+      .returning({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        emailVerified: user.emailVerified,
+        image: user.image,
+        imageCldPubId: user.imageCldPubId,
+        role: user.role,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      });
+
+    return res.json({ success: true, data: updated });
+  } catch (error) {
+    console.error("PUT /api/users/:id error:", error);
+    return res.status(500).json({ success: false, error: "Failed to update user." });
+  }
+});
+
+// DELETE /api/users/:id - delete a user (admin only)
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Prevent self-deletion
+    if (req.user?.id === id) {
+      return res.status(409).json({
+        success: false,
+        error: "You cannot delete your own account.",
+      });
+    }
+
+    const [found] = await db
+      .select({ id: user.id })
+      .from(user)
+      .where(eq(user.id, id))
+      .limit(1);
+
+    if (!found) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    await db.delete(user).where(eq(user.id, id));
+
+    return res.json({ success: true, message: "User deleted successfully." });
+  } catch (error) {
+    console.error("DELETE /api/users/:id error:", error);
+    return res.status(500).json({ success: false, error: "Failed to delete user." });
+  }
+});
+
+export default router;
