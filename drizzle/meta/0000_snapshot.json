@@ -1,5 +1,5 @@
 {
-  "id": "227da2ae-2984-421d-98b6-b4ce69928b41",
+  "id": "c037cf5b-34c3-4372-886e-fb641833a30f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -16,7 +16,7 @@
         },
         "year": {
           "name": "year",
-          "type": "integer",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true
         },
@@ -280,7 +280,7 @@
         },
         "subject_position": {
           "name": "subject_position",
-          "type": "integer",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false
         },
@@ -541,11 +541,24 @@
           "primaryKey": false,
           "notNull": true
         },
+        "applicable_term_id": {
+          "name": "applicable_term_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "applicable_to_level": {
           "name": "applicable_to_level",
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": false
+        },
+        "apply_once": {
+          "name": "apply_once",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -570,6 +583,19 @@
           "tableTo": "academic_years",
           "columnsFrom": [
             "academic_year_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "fees_applicable_term_id_terms_id_fk": {
+          "name": "fees_applicable_term_id_terms_id_fk",
+          "tableFrom": "fees",
+          "tableTo": "terms",
+          "columnsFrom": [
+            "applicable_term_id"
           ],
           "columnsTo": [
             "id"
@@ -1216,6 +1242,20 @@
           "primaryKey": false,
           "notNull": false
         },
+        "discount_type": {
+          "name": "discount_type",
+          "type": "discount_type",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discount_amount": {
+          "name": "discount_amount",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'0'"
+        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -1270,6 +1310,12 @@
         "phone": {
           "name": "phone",
           "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "address": {
+          "name": "address",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -1630,13 +1676,19 @@
         },
         "class_position": {
           "name": "class_position",
-          "type": "integer",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": false
         },
         "remarks": {
           "name": "remarks",
           "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "aggregate": {
+          "name": "aggregate",
+          "type": "numeric(8, 2)",
           "primaryKey": false,
           "notNull": false
         },
@@ -1649,8 +1701,8 @@
         }
       },
       "indexes": {
-        "idx_student_class_year": {
-          "name": "idx_student_class_year",
+        "idx_student_class_year_term": {
+          "name": "idx_student_class_year_term",
           "columns": [
             {
               "expression": "student_id",
@@ -1660,6 +1712,12 @@
             },
             {
               "expression": "academic_year_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "term_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -2059,6 +2117,20 @@
           "primaryKey": false,
           "notNull": true,
           "default": true
+        },
+        "on_scholarship": {
+          "name": "on_scholarship",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "get_discount": {
+          "name": "get_discount",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "created_at": {
           "name": "created_at",
@@ -2521,7 +2593,7 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
-          "default": "'student'"
+          "default": "'staff'"
         },
         "image_cld_pub_id": {
           "name": "image_cld_pub_id",
@@ -2653,13 +2725,21 @@
         "absent"
       ]
     },
+    "public.discount_type": {
+      "name": "discount_type",
+      "schema": "public",
+      "values": [
+        "value",
+        "percentage"
+      ]
+    },
     "public.fee_type": {
       "name": "fee_type",
       "schema": "public",
       "values": [
         "admission",
-        "promotion",
         "tuition",
+        "feeding",
         "other"
       ]
     },
@@ -2704,7 +2784,7 @@
       "name": "role",
       "schema": "public",
       "values": [
-        "student",
+        "staff",
         "teacher",
         "admin"
       ]

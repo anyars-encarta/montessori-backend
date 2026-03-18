@@ -1,13 +1,14 @@
 CREATE TYPE "public"."attendance_status" AS ENUM('present', 'absent');--> statement-breakpoint
-CREATE TYPE "public"."fee_type" AS ENUM('admission', 'promotion', 'tuition', 'other');--> statement-breakpoint
+CREATE TYPE "public"."discount_type" AS ENUM('value', 'percentage');--> statement-breakpoint
+CREATE TYPE "public"."fee_type" AS ENUM('admission', 'tuition', 'feeding', 'other');--> statement-breakpoint
 CREATE TYPE "public"."gender" AS ENUM('male', 'female', 'other');--> statement-breakpoint
 CREATE TYPE "public"."living_with" AS ENUM('both_parents', 'mother_only', 'father_only', 'guardian', 'other_person');--> statement-breakpoint
 CREATE TYPE "public"."payment_status" AS ENUM('pending', 'partial', 'paid');--> statement-breakpoint
 CREATE TYPE "public"."staff_type" AS ENUM('teacher', 'non_teaching');--> statement-breakpoint
-CREATE TYPE "public"."role" AS ENUM('student', 'teacher', 'admin');--> statement-breakpoint
+CREATE TYPE "public"."role" AS ENUM('staff', 'teacher', 'admin');--> statement-breakpoint
 CREATE TABLE "academic_years" (
 	"id" serial PRIMARY KEY NOT NULL,
-	"year" integer NOT NULL,
+	"year" varchar(20) NOT NULL,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -45,7 +46,7 @@ CREATE TABLE "continuous_assessments" (
 	"class_mark" numeric(5, 2) NOT NULL,
 	"exam_mark" numeric(5, 2) NOT NULL,
 	"total_mark" numeric(5, 2) NOT NULL,
-	"subject_position" integer,
+	"subject_position" varchar(10),
 	"remarks" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
@@ -77,7 +78,9 @@ CREATE TABLE "fees" (
 	"amount" numeric(10, 2) NOT NULL,
 	"fee_type" "fee_type" NOT NULL,
 	"academic_year_id" integer NOT NULL,
+	"applicable_term_id" integer,
 	"applicable_to_level" varchar(50),
+	"apply_once" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -164,6 +167,8 @@ CREATE TABLE "school_details" (
 	"email" varchar(100) NOT NULL,
 	"website" varchar(255),
 	"logo" varchar(255),
+	"discount_type" "discount_type" NOT NULL,
+	"discount_amount" numeric(5, 2) DEFAULT '0' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
@@ -174,6 +179,7 @@ CREATE TABLE "staff" (
 	"last_name" varchar(100) NOT NULL,
 	"email" varchar(255),
 	"phone" varchar(20),
+	"address" text,
 	"date_of_birth" date,
 	"gender" "gender" NOT NULL,
 	"staff_type" "staff_type" NOT NULL,
@@ -218,8 +224,9 @@ CREATE TABLE "student_class_enrollments" (
 	"term_id" integer NOT NULL,
 	"enrollment_date" date NOT NULL,
 	"promotion_date" date,
-	"class_position" integer,
+	"class_position" varchar(10),
 	"remarks" text,
+	"aggregate" numeric(8, 2),
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -261,6 +268,8 @@ CREATE TABLE "students" (
 	"image_cld_pub_id" varchar(255),
 	"registration_number" varchar(50),
 	"is_active" boolean DEFAULT true NOT NULL,
+	"on_scholarship" boolean DEFAULT false NOT NULL,
+	"get_discount" boolean DEFAULT false NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
 	CONSTRAINT "students_registration_number_unique" UNIQUE("registration_number")
@@ -323,7 +332,7 @@ CREATE TABLE "user" (
 	"email" text NOT NULL,
 	"email_verified" boolean DEFAULT false NOT NULL,
 	"image" text,
-	"role" "role" DEFAULT 'student' NOT NULL,
+	"role" "role" DEFAULT 'staff' NOT NULL,
 	"image_cld_pub_id" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL,
@@ -349,6 +358,7 @@ ALTER TABLE "continuous_assessments" ADD CONSTRAINT "continuous_assessments_term
 ALTER TABLE "expenses" ADD CONSTRAINT "expenses_category_id_expense_categories_id_fk" FOREIGN KEY ("category_id") REFERENCES "public"."expense_categories"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "expenses" ADD CONSTRAINT "expenses_created_by_staff_id_fk" FOREIGN KEY ("created_by") REFERENCES "public"."staff"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "fees" ADD CONSTRAINT "fees_academic_year_id_academic_years_id_fk" FOREIGN KEY ("academic_year_id") REFERENCES "public"."academic_years"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "fees" ADD CONSTRAINT "fees_applicable_term_id_terms_id_fk" FOREIGN KEY ("applicable_term_id") REFERENCES "public"."terms"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "health_details" ADD CONSTRAINT "health_details_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "other_significant_data" ADD CONSTRAINT "other_significant_data_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "payments" ADD CONSTRAINT "payments_student_id_students_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."students"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
@@ -380,7 +390,7 @@ ALTER TABLE "session" ADD CONSTRAINT "session_user_id_user_id_fk" FOREIGN KEY ("
 CREATE UNIQUE INDEX "idx_student_class_term_position" ON "positions" USING btree ("student_id","class_id","term_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "idx_staff_date_attendance" ON "staff_attendances" USING btree ("staff_id","attendance_date");--> statement-breakpoint
 CREATE UNIQUE INDEX "idx_student_date_attendance" ON "student_attendances" USING btree ("student_id","attendance_date");--> statement-breakpoint
-CREATE UNIQUE INDEX "idx_student_class_year" ON "student_class_enrollments" USING btree ("student_id","academic_year_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "idx_student_class_year_term" ON "student_class_enrollments" USING btree ("student_id","academic_year_id","term_id");--> statement-breakpoint
 CREATE INDEX "account_user_id_idx" ON "account" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_user_id_idx" ON "session" USING btree ("user_id");--> statement-breakpoint
 CREATE INDEX "session_token_idx" ON "session" USING btree ("token");--> statement-breakpoint

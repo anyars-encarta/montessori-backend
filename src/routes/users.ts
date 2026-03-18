@@ -12,8 +12,8 @@ const parsePositiveInt = (value: unknown) => {
   return parsed;
 };
 
-const isValidRole = (value: unknown): value is "student" | "teacher" | "admin" => {
-  return value === "student" || value === "teacher" || value === "admin";
+const isValidRole = (value: unknown): value is "staff" | "teacher" | "admin" => {
+  return value === "staff" || value === "teacher" || value === "admin";
 };
 
 // GET /api/users - list users with pagination, search, role filter

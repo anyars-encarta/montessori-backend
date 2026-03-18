@@ -49,7 +49,7 @@
       "id": "student_1",
       "name": "Arjun Singh",
       "email": "arjun.singh@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#123",
       "image": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1545996124-0501ebae84d0?auto=format&fit=crop&w=400&q=80"
@@ -58,7 +58,7 @@
       "id": "student_2",
       "name": "Emily Chen",
       "email": "emily.chen@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#234",
       "image": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1527980965255-d3b416303d12?auto=format&fit=crop&w=400&q=80"
@@ -67,7 +67,7 @@
       "id": "student_3",
       "name": "Zoe Parker",
       "email": "zoe.parker@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#345",
       "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80"
@@ -76,7 +76,7 @@
       "id": "student_4",
       "name": "Jacob Miller",
       "email": "jacob.miller@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#456",
       "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
@@ -85,7 +85,7 @@
       "id": "student_5",
       "name": "Sara James",
       "email": "sara.james@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#567",
       "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=400&q=80"
@@ -94,7 +94,7 @@
       "id": "student_6",
       "name": "Daniel Wright",
       "email": "daniel.wright@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#678",
       "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=400&q=80"
@@ -103,7 +103,7 @@
       "id": "student_7",
       "name": "Nina Alvarez",
       "email": "nina.alvarez@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#789",
       "image": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=400&q=80"
@@ -112,7 +112,7 @@
       "id": "student_8",
       "name": "Omar Farouk",
       "email": "omar.farouk@student.montessori.edu",
-      "role": "student",
+      "role": "staff",
       "password": "Student#890",
       "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80",
       "imageCldPubId": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80"
@@ -3839,7 +3839,7 @@
       "name": "Promotion Y1 P1",
       "description": "Promotion processing for P1 (Year 1)",
       "amount": "89.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 1,
       "applicableToLevel": "P1"
     },
@@ -3871,7 +3871,7 @@
       "name": "Promotion Y1 P2",
       "description": "Promotion processing for P2 (Year 1)",
       "amount": "93.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 1,
       "applicableToLevel": "P2"
     },
@@ -3903,7 +3903,7 @@
       "name": "Promotion Y1 P3",
       "description": "Promotion processing for P3 (Year 1)",
       "amount": "97.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 1,
       "applicableToLevel": "P3"
     },
@@ -3935,7 +3935,7 @@
       "name": "Promotion Y1 P4",
       "description": "Promotion processing for P4 (Year 1)",
       "amount": "101.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 1,
       "applicableToLevel": "P4"
     },
@@ -3975,7 +3975,7 @@
       "name": "Promotion Y2 P1",
       "description": "Promotion processing for P1 (Year 2)",
       "amount": "94.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 2,
       "applicableToLevel": "P1"
     },
@@ -4007,7 +4007,7 @@
       "name": "Promotion Y2 P2",
       "description": "Promotion processing for P2 (Year 2)",
       "amount": "98.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 2,
       "applicableToLevel": "P2"
     },
@@ -4039,7 +4039,7 @@
       "name": "Promotion Y2 P3",
       "description": "Promotion processing for P3 (Year 2)",
       "amount": "102.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 2,
       "applicableToLevel": "P3"
     },
@@ -4071,7 +4071,7 @@
       "name": "Promotion Y2 P4",
       "description": "Promotion processing for P4 (Year 2)",
       "amount": "106.00",
-      "feeType": "promotion",
+      "feeType": "other",
       "academicYearId": 2,
       "applicableToLevel": "P4"
     },

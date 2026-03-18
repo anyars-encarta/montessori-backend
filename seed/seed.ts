@@ -37,7 +37,7 @@ type SeedUser = {
   id: string;
   name: string;
   email: string;
-  role: "student" | "teacher" | "admin";
+  role: "staff" | "teacher" | "admin";
   password: string;
   image: string;
   imageCldPubId: string;
@@ -165,7 +165,7 @@ type SeedFee = {
   name: string;
   description: string;
   amount: string;
-  feeType: "admission" | "promotion" | "tuition" | "other";
+  feeType: "admission" | "tuition" | "feeding" | "other";
   academicYearId: number;
   applicableToLevel: string | null;
 };
@@ -738,7 +738,7 @@ const seed = async () => {
       academicYearId: number;
       termId: number;
       enrollmentDate: string;
-      classPosition: number | null;
+      classPosition: string | null;
       remarks: string | null;
     }> = [];
 
@@ -776,7 +776,8 @@ const seed = async () => {
           academicYearId: mappedAcademicYearId,
           termId: mappedTermId,
           enrollmentDate: sce.enrollmentDate,
-          classPosition: sce.classPosition,
+          classPosition:
+            sce.classPosition === null ? null : String(sce.classPosition),
           remarks: sce.remarks,
         });
       }
