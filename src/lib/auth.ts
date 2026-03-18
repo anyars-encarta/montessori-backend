@@ -6,7 +6,7 @@ import { z } from "zod";
 
 const secret = process.env.BETTER_AUTH_SECRET!;
 const frontendUrl = process.env.FRONTEND_URL!;
-const RoleEnum = z.enum(["student", "teacher", "admin"]);
+const RoleEnum = z.enum(["staff", "teacher", "admin"]);
 
 if (!secret) throw new Error("BETTER_AUTH_SECRET is not set in the .env file");
 if (!frontendUrl) throw new Error("FRONTEND_URL is not set in the .env file");
@@ -27,7 +27,7 @@ export const auth = betterAuth({
       role: {
         type: "string",
         required: true,
-        defaultValue: "student",
+        defaultValue: "staff",
         validator: { input: RoleEnum },
       },
       imageCldPubId: {
