@@ -179,7 +179,7 @@ router.put("/:id", async (req, res) => {
     if (!isSelf && !role) {
       return res.status(400).json({
         success: false,
-        error: "role must be one of: admin, teacher, student.",
+        error: "role must be one of: admin, teacher, staff.",
       });
     }
 
