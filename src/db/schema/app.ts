@@ -328,6 +328,7 @@ export const continuousAssessments = pgTable("continuous_assessments", {
   classMark: numeric("class_mark", { precision: 5, scale: 2 }).notNull(),
   examMark: numeric("exam_mark", { precision: 5, scale: 2 }).notNull(),
   totalMark: numeric("total_mark", { precision: 5, scale: 2 }).notNull(),
+  grade: varchar("grade", { length: 10}),
   subjectPosition: varchar("subject_position", { length: 10 }), // Position in the subject for the term
   remarks: text("remarks"),
   createdAt: timestamp("created_at").notNull().defaultNow(),

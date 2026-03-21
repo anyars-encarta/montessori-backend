@@ -14422,6 +14422,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "A",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14438,6 +14439,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "A+",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14454,6 +14456,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B+",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14470,6 +14473,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14486,6 +14490,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14502,6 +14507,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "1",
       "remarks": "HIGHEST"
     },
@@ -14518,6 +14524,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "2",
       "remarks": "SECOND HIGHEST"
     },
@@ -14534,6 +14541,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "2",
       "remarks": "SECOND HIGHEST"
     },
@@ -14550,6 +14558,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "2",
       "remarks": "SECOND HIGHEST"
     },
@@ -14566,6 +14575,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "2",
       "remarks": "SECOND HIGHEST"
     },
@@ -14582,6 +14592,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "3",
       "remarks": "THIRD HIGHEST"
     },
@@ -14598,6 +14609,7 @@
       "classMark": "18",
       "examMark": "72",
       "totalMark": "90",
+      "grade": "B",
       "subjectPosition": "3",
       "remarks": "THIRD HIGHEST"
     }

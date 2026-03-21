@@ -232,6 +232,7 @@ type SeedContinuousAssessment = {
   classMark: string;
   examMark: string;
   totalMark: string;
+  grade: string;
   subjectPosition: number | null;
   remarks: string | null;
 };
@@ -1178,6 +1179,7 @@ const seed = async () => {
           classMark: ca.classMark,
           examMark: ca.examMark,
           totalMark: ca.totalMark,
+          grade: ca.grade,
           subjectPosition: ca.subjectPosition,
           remarks: ca.remarks,
         };
