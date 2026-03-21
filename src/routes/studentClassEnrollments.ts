@@ -124,6 +124,18 @@ const getUpperClassRemark = (score: number) => {
   return "FAIL";
 };
 
+const getUpperClassGrade = (score: number) => {
+  if (score >= 90) return "1";
+  if (score >= 80) return "2";
+  if (score >= 70) return "3";
+  if (score >= 60) return "4";
+  if (score >= 55) return "5";
+  if (score >= 50) return "6";
+  if (score >= 40) return "7";
+  if (score >= 35) return "8";
+  return "9";
+};
+
 const toOrdinal = (value: number) => {
   const abs = Math.abs(value);
   const mod100 = abs % 100;
@@ -740,7 +752,10 @@ router.post("/run-grades", async (req, res) => {
       existingRows.push({ id: row.id, score });
       assessmentsBySubject.set(row.subjectId, existingRows);
 
-      gradeByAssessmentId.set(row.id, getLowerClassGrade(score));
+      gradeByAssessmentId.set(
+        row.id,
+        isUpperClass ? getUpperClassGrade(score) : getLowerClassGrade(score),
+      );
       subjectRemarkByAssessmentId.set(
         row.id,
         isUpperClass ? getUpperClassRemark(score) : getLowerClassRemark(score),
@@ -773,29 +788,29 @@ router.post("/run-grades", async (req, res) => {
       {
         totalScore: number;
         subjectCount: number;
-        upperRanks: number[];
+        upperGradePoints: number[];
       }
     >();
 
     for (const assessment of assessmentRows) {
       const current =
         statsByStudentId.get(assessment.studentId) ??
-        ({ totalScore: 0, subjectCount: 0, upperRanks: [] } as const);
+        ({ totalScore: 0, subjectCount: 0, upperGradePoints: [] } as const);
 
       const score = toScore(assessment.totalMark);
       const next = {
         totalScore: current.totalScore + score,
         subjectCount: current.subjectCount + 1,
-        upperRanks: [...current.upperRanks],
+        upperGradePoints: [...current.upperGradePoints],
       };
 
       if (isUpperClass) {
-        const parsedRank = Number.parseInt(
-          subjectPositionByAssessmentId.get(assessment.id) ?? "",
+        const parsedGradePoint = Number.parseInt(
+          gradeByAssessmentId.get(assessment.id) ?? "",
           10,
         );
-        if (Number.isFinite(parsedRank) && parsedRank > 0) {
-          next.upperRanks.push(parsedRank);
+        if (Number.isFinite(parsedGradePoint) && parsedGradePoint > 0) {
+          next.upperGradePoints.push(parsedGradePoint);
         }
       }
 
@@ -816,8 +831,10 @@ router.post("/run-grades", async (req, res) => {
         }
 
         const averageScore = stats.totalScore / stats.subjectCount;
-        const bestSixRanks = [...stats.upperRanks].sort((a, b) => a - b).slice(0, 6);
-        const aggregate = bestSixRanks.reduce((sum, rank) => sum + rank, 0);
+        const bestSixGrades = [...stats.upperGradePoints]
+          .sort((a, b) => a - b)
+          .slice(0, 6);
+        const aggregate = bestSixGrades.reduce((sum, gradePoint) => sum + gradePoint, 0);
 
         return {
           enrollmentId: enrollment.id,
@@ -855,7 +872,7 @@ router.post("/run-grades", async (req, res) => {
             .set({
               classPosition: classRank > 0 ? toOrdinal(classRank) : null,
               remarks: getUpperClassRemark(row.averageScore),
-              aggregate: row.aggregate.toFixed(2),
+              aggregate: row.aggregate.toString(),
             })
             .where(eq(studentClassEnrollments.id, row.enrollmentId));
         }),
