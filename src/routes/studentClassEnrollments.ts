@@ -727,32 +727,30 @@ router.post("/run-grades", async (req, res) => {
         ),
       );
 
+    const gradeByAssessmentId = new Map<number, string>();
     const subjectPositionByAssessmentId = new Map<number, string>();
     const subjectRemarkByAssessmentId = new Map<number, string>();
 
-    if (isUpperClass) {
-      const assessmentsBySubject = new Map<number, Array<{ id: number; score: number }>>();
+    const assessmentsBySubject = new Map<number, Array<{ id: number; score: number }>>();
 
-      for (const row of assessmentRows) {
-        const score = toScore(row.totalMark);
-        const existingRows = assessmentsBySubject.get(row.subjectId) ?? [];
-        existingRows.push({ id: row.id, score });
-        assessmentsBySubject.set(row.subjectId, existingRows);
-      }
+    for (const row of assessmentRows) {
+      const score = toScore(row.totalMark);
+      const existingRows = assessmentsBySubject.get(row.subjectId) ?? [];
+      existingRows.push({ id: row.id, score });
+      assessmentsBySubject.set(row.subjectId, existingRows);
 
-      for (const rows of assessmentsBySubject.values()) {
-        const ranks = getDenseRanks(rows);
-        for (const row of rows) {
-          const rank = ranks.get(row.id) ?? 0;
-          subjectPositionByAssessmentId.set(row.id, toOrdinal(rank));
-          subjectRemarkByAssessmentId.set(row.id, getUpperClassRemark(row.score));
-        }
-      }
-    } else {
-      for (const row of assessmentRows) {
-        const score = toScore(row.totalMark);
-        subjectPositionByAssessmentId.set(row.id, getLowerClassGrade(score));
-        subjectRemarkByAssessmentId.set(row.id, getLowerClassRemark(score));
+      gradeByAssessmentId.set(row.id, getLowerClassGrade(score));
+      subjectRemarkByAssessmentId.set(
+        row.id,
+        isUpperClass ? getUpperClassRemark(score) : getLowerClassRemark(score),
+      );
+    }
+
+    for (const rows of assessmentsBySubject.values()) {
+      const ranks = getDenseRanks(rows);
+      for (const row of rows) {
+        const rank = ranks.get(row.id) ?? 0;
+        subjectPositionByAssessmentId.set(row.id, rank > 0 ? toOrdinal(rank) : "");
       }
     }
 
@@ -761,6 +759,7 @@ router.post("/run-grades", async (req, res) => {
         db
           .update(continuousAssessments)
           .set({
+            grade: gradeByAssessmentId.get(row.id) ?? null,
             subjectPosition: subjectPositionByAssessmentId.get(row.id) ?? null,
             remarks: subjectRemarkByAssessmentId.get(row.id) ?? null,
           })
@@ -861,10 +860,34 @@ router.post("/run-grades", async (req, res) => {
         }),
       );
     } else {
+      const lowerResults = enrollmentRows.map((enrollment) => {
+        const stats = statsByStudentId.get(enrollment.studentId);
+
+        if (!stats || stats.subjectCount === 0) {
+          return {
+            enrollmentId: enrollment.id,
+            hasStats: false,
+            averageScore: 0,
+          };
+        }
+
+        return {
+          enrollmentId: enrollment.id,
+          hasStats: true,
+          averageScore: stats.totalScore / stats.subjectCount,
+        };
+      });
+
+      const lowerRankMap = getDenseRanks(
+        lowerResults
+          .filter((row) => row.hasStats)
+          .map((row) => ({ id: row.enrollmentId, score: row.averageScore })),
+        "desc",
+      );
+
       await Promise.all(
-        enrollmentRows.map(async (enrollment) => {
-          const stats = statsByStudentId.get(enrollment.studentId);
-          if (!stats || stats.subjectCount === 0) {
+        lowerResults.map(async (row) => {
+          if (!row.hasStats) {
             await db
               .update(studentClassEnrollments)
               .set({
@@ -872,20 +895,20 @@ router.post("/run-grades", async (req, res) => {
                 remarks: null,
                 aggregate: null,
               })
-              .where(eq(studentClassEnrollments.id, enrollment.id));
+              .where(eq(studentClassEnrollments.id, row.enrollmentId));
             return;
           }
 
-          const averageScore = stats.totalScore / stats.subjectCount;
+          const classRank = lowerRankMap.get(row.enrollmentId) ?? 0;
 
           await db
             .update(studentClassEnrollments)
             .set({
-              classPosition: getLowerClassGrade(averageScore),
-              remarks: getLowerClassRemark(averageScore),
+              classPosition: classRank > 0 ? toOrdinal(classRank) : null,
+              remarks: getLowerClassRemark(row.averageScore),
               aggregate: null,
             })
-            .where(eq(studentClassEnrollments.id, enrollment.id));
+            .where(eq(studentClassEnrollments.id, row.enrollmentId));
         }),
       );
     }
