@@ -589,6 +589,7 @@ router.get("/overview", async (req, res) => {
             classMark: continuousAssessments.classMark,
             examMark: continuousAssessments.examMark,
             totalMark: continuousAssessments.totalMark,
+            grade: continuousAssessments.grade,
             subjectPosition: continuousAssessments.subjectPosition,
             remarks: continuousAssessments.remarks,
           })
@@ -759,7 +760,7 @@ router.post("/run-grades", async (req, res) => {
         db
           .update(continuousAssessments)
           .set({
-            grade: gradeByAssessmentId.get(row.id) ?? null,
+            grade: gradeByAssessmentId.get(row.id) ?? getLowerClassGrade(toScore(row.totalMark)),
             subjectPosition: subjectPositionByAssessmentId.get(row.id) ?? null,
             remarks: subjectRemarkByAssessmentId.get(row.id) ?? null,
           })
