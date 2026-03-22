@@ -1,5 +1,5 @@
 import express from "express";
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   academicYears,
@@ -9,6 +9,7 @@ import {
   fees,
   schoolDetails,
   studentClassEnrollments,
+  studentAttendances,
   studentFees,
   subjects,
   students,
@@ -84,6 +85,59 @@ const normalizeLevel = (value: string | null | undefined) => {
 const toScore = (value: string | number | null | undefined) => {
   const parsed = Number.parseFloat(String(value ?? "0"));
   return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const toDateOnlyString = (value: Date) => {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(value.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateOnly = (value: string | Date | null | undefined) => {
+  if (!value) return null;
+
+  const date =
+    value instanceof Date
+      ? new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()))
+      : new Date(`${value}T00:00:00Z`);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const publicHolidayDateSet = new Set(
+  (process.env.SCHOOL_PUBLIC_HOLIDAYS ?? process.env.PUBLIC_HOLIDAYS ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean),
+);
+
+const getWorkingDaysBetween = (
+  startDate: string | Date | null | undefined,
+  endDate: string | Date | null | undefined,
+) => {
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+
+  if (!start || !end || start > end) return 0;
+
+  const cursor = new Date(start);
+  let count = 0;
+
+  while (cursor <= end) {
+    const day = cursor.getUTCDay();
+    const dateKey = toDateOnlyString(cursor);
+    const isWeekend = day === 0 || day === 6;
+    const isPublicHoliday = publicHolidayDateSet.has(dateKey);
+
+    if (!isWeekend && !isPublicHoliday) {
+      count += 1;
+    }
+
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return count;
 };
 
 const getLowerClassGrade = (score: number) => {
@@ -566,11 +620,14 @@ router.get("/overview", async (req, res) => {
         classId: classes.id,
         className: classes.name,
         classLevel: classes.level,
+        classCapacity: classes.capacity,
         academicYearId: academicYears.id,
         academicYear: academicYears.year,
         termId: terms.id,
         termName: terms.name,
         termSequenceNumber: terms.sequenceNumber,
+        termStartDate: terms.startDate,
+        termEndDate: terms.endDate,
         enrollmentDate: studentClassEnrollments.enrollmentDate,
         classPosition: studentClassEnrollments.classPosition,
         aggregate: studentClassEnrollments.aggregate,
@@ -588,6 +645,31 @@ router.get("/overview", async (req, res) => {
 
     const data = await Promise.all(
       enrollmentRows.map(async (row) => {
+        const [nextTermRow] = await db
+          .select({ startDate: terms.startDate })
+          .from(terms)
+          .where(gt(terms.startDate, row.termEndDate))
+          .orderBy(asc(terms.startDate))
+          .limit(1);
+
+        const [attendanceCountRow] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(studentAttendances)
+          .where(
+            and(
+              eq(studentAttendances.studentId, row.studentId),
+              eq(studentAttendances.status, "present"),
+              gte(studentAttendances.attendanceDate, row.termStartDate),
+              lte(studentAttendances.attendanceDate, row.termEndDate),
+            ),
+          );
+
+        const presentAttendance = Number(attendanceCountRow?.count ?? 0);
+        const totalWorkingDays = getWorkingDaysBetween(
+          row.termStartDate,
+          row.termEndDate,
+        );
+
         const assessmentRows = await db
           .select({
             id: continuousAssessments.id,
@@ -627,6 +709,7 @@ router.get("/overview", async (req, res) => {
             id: row.classId,
             name: row.className,
             level: row.classLevel,
+            capacity: row.classCapacity,
           },
           academicYear: {
             id: row.academicYearId,
@@ -636,8 +719,12 @@ router.get("/overview", async (req, res) => {
             id: row.termId,
             name: row.termName,
             sequenceNumber: row.termSequenceNumber,
+            startDate: row.termStartDate,
+            endDate: row.termEndDate,
+            nextTermStartDate: nextTermRow?.startDate ?? null,
           },
           enrollmentDate: row.enrollmentDate,
+          attendance: `${presentAttendance} Out of ${totalWorkingDays}`,
           classPosition: row.classPosition,
           aggregate: row.aggregate,
           remarks: row.remarks,
