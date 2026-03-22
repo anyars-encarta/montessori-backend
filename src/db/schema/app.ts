@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   primaryKey,
   pgEnum,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -53,6 +54,7 @@ export const terms = pgTable("terms", {
   academicYearId: integer("academic_year_id").notNull().references(() => academicYears.id),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
+  holidayDates: jsonb("holiday_dates").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 

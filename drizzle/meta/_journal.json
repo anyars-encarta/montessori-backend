@@ -15,6 +15,13 @@
       "when": 1774095533860,
       "tag": "0001_outgoing_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774300000000,
+      "tag": "0002_term_holiday_dates",
+      "breakpoints": true
     }
   ]
 }

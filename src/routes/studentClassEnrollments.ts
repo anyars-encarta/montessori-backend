@@ -105,19 +105,21 @@ const parseDateOnly = (value: string | Date | null | undefined) => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
-const publicHolidayDateSet = new Set(
-  (process.env.SCHOOL_PUBLIC_HOLIDAYS ?? process.env.PUBLIC_HOLIDAYS ?? "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean),
-);
-
 const getWorkingDaysBetween = (
   startDate: string | Date | null | undefined,
   endDate: string | Date | null | undefined,
+  holidayDates: string[] = [],
 ) => {
   const start = parseDateOnly(startDate);
   const end = parseDateOnly(endDate);
+  const holidayDateSet = new Set(
+    holidayDates
+      .map((item) => {
+        const parsed = parseDateOnly(item);
+        return parsed ? toDateOnlyString(parsed) : null;
+      })
+      .filter((item): item is string => Boolean(item)),
+  );
 
   if (!start || !end || start > end) return 0;
 
@@ -128,7 +130,7 @@ const getWorkingDaysBetween = (
     const day = cursor.getUTCDay();
     const dateKey = toDateOnlyString(cursor);
     const isWeekend = day === 0 || day === 6;
-    const isPublicHoliday = publicHolidayDateSet.has(dateKey);
+    const isPublicHoliday = holidayDateSet.has(dateKey);
 
     if (!isWeekend && !isPublicHoliday) {
       count += 1;
@@ -628,6 +630,7 @@ router.get("/overview", async (req, res) => {
         termSequenceNumber: terms.sequenceNumber,
         termStartDate: terms.startDate,
         termEndDate: terms.endDate,
+        termHolidayDates: terms.holidayDates,
         enrollmentDate: studentClassEnrollments.enrollmentDate,
         classPosition: studentClassEnrollments.classPosition,
         aggregate: studentClassEnrollments.aggregate,
@@ -668,6 +671,9 @@ router.get("/overview", async (req, res) => {
         const totalWorkingDays = getWorkingDaysBetween(
           row.termStartDate,
           row.termEndDate,
+          Array.isArray(row.termHolidayDates)
+            ? row.termHolidayDates.filter((item): item is string => typeof item === "string")
+            : [],
         );
 
         const assessmentRows = await db
