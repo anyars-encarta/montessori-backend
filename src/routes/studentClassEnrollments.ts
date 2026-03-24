@@ -1,5 +1,5 @@
 import express from "express";
-import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, lte, or, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
   academicYears,
@@ -9,6 +9,7 @@ import {
   fees,
   schoolDetails,
   studentClassEnrollments,
+  studentAttendances,
   studentFees,
   subjects,
   students,
@@ -86,6 +87,61 @@ const toScore = (value: string | number | null | undefined) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const toDateOnlyString = (value: Date) => {
+  const year = value.getUTCFullYear();
+  const month = String(value.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(value.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateOnly = (value: string | Date | null | undefined) => {
+  if (!value) return null;
+
+  const date =
+    value instanceof Date
+      ? new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()))
+      : new Date(`${value}T00:00:00Z`);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const getWorkingDaysBetween = (
+  startDate: string | Date | null | undefined,
+  endDate: string | Date | null | undefined,
+  holidayDates: string[] = [],
+) => {
+  const start = parseDateOnly(startDate);
+  const end = parseDateOnly(endDate);
+  const holidayDateSet = new Set(
+    holidayDates
+      .map((item) => {
+        const parsed = parseDateOnly(item);
+        return parsed ? toDateOnlyString(parsed) : null;
+      })
+      .filter((item): item is string => Boolean(item)),
+  );
+
+  if (!start || !end || start > end) return 0;
+
+  const cursor = new Date(start);
+  let count = 0;
+
+  while (cursor <= end) {
+    const day = cursor.getUTCDay();
+    const dateKey = toDateOnlyString(cursor);
+    const isWeekend = day === 0 || day === 6;
+    const isPublicHoliday = holidayDateSet.has(dateKey);
+
+    if (!isWeekend && !isPublicHoliday) {
+      count += 1;
+    }
+
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  return count;
+};
+
 const getLowerClassGrade = (score: number) => {
   if (score >= 90) return "A+";
   if (score >= 85) return "A";
@@ -122,6 +178,18 @@ const getUpperClassRemark = (score: number) => {
   if (score >= 40) return "LOW";
   if (score >= 35) return "CREDIT";
   return "FAIL";
+};
+
+const getUpperClassGrade = (score: number) => {
+  if (score >= 90) return "1";
+  if (score >= 80) return "2";
+  if (score >= 70) return "3";
+  if (score >= 60) return "4";
+  if (score >= 55) return "5";
+  if (score >= 50) return "6";
+  if (score >= 40) return "7";
+  if (score >= 35) return "8";
+  return "9";
 };
 
 const toOrdinal = (value: number) => {
@@ -554,11 +622,15 @@ router.get("/overview", async (req, res) => {
         classId: classes.id,
         className: classes.name,
         classLevel: classes.level,
+        classCapacity: classes.capacity,
         academicYearId: academicYears.id,
         academicYear: academicYears.year,
         termId: terms.id,
         termName: terms.name,
         termSequenceNumber: terms.sequenceNumber,
+        termStartDate: terms.startDate,
+        termEndDate: terms.endDate,
+        termHolidayDates: terms.holidayDates,
         enrollmentDate: studentClassEnrollments.enrollmentDate,
         classPosition: studentClassEnrollments.classPosition,
         aggregate: studentClassEnrollments.aggregate,
@@ -570,12 +642,126 @@ router.get("/overview", async (req, res) => {
       .innerJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
       .innerJoin(terms, eq(studentClassEnrollments.termId, terms.id))
       .where(whereClause)
-      .orderBy(desc(academicYears.year), classes.name, terms.sequenceNumber, students.firstName)
+      .orderBy(desc(academicYears.startDate), classes.name, terms.sequenceNumber, students.firstName)
       .limit(limitPerPage)
       .offset(offset);
 
+    const termEndKeys = [...new Set(
+      enrollmentRows
+        .map((row) => {
+          const parsed = parseDateOnly(row.termEndDate);
+          return parsed ? toDateOnlyString(parsed) : null;
+        })
+        .filter((value): value is string => Boolean(value)),
+    )].sort();
+
+    const nextTermStartDateByEndDate = new Map<string, string | null>();
+
+    if (termEndKeys.length) {
+      const nextTermCandidates = await db
+        .select({ startDate: terms.startDate })
+        .from(terms)
+        .where(gt(terms.startDate, termEndKeys[0]!))
+        .orderBy(asc(terms.startDate));
+
+      const candidateStartDates = nextTermCandidates
+        .map((row) => {
+          const parsed = parseDateOnly(row.startDate);
+          return parsed ? toDateOnlyString(parsed) : null;
+        })
+        .filter((value): value is string => Boolean(value));
+
+      termEndKeys.forEach((termEndKey) => {
+        const nextStartDate = candidateStartDates.find((startDate) => startDate > termEndKey) ?? null;
+        nextTermStartDateByEndDate.set(termEndKey, nextStartDate);
+      });
+    }
+
+    const uniqueStudentIds = [...new Set(enrollmentRows.map((row) => row.studentId))];
+    const termStartKeys = enrollmentRows
+      .map((row) => {
+        const parsed = parseDateOnly(row.termStartDate);
+        return parsed ? toDateOnlyString(parsed) : null;
+      })
+      .filter((value): value is string => Boolean(value));
+    const minAttendanceDate = termStartKeys.length ? termStartKeys.reduce((min, value) => (value < min ? value : min)) : null;
+    const maxAttendanceDate = termEndKeys.length ? termEndKeys.reduce((max, value) => (value > max ? value : max)) : null;
+
+    const attendanceByStudentId = new Map<number, Array<{ date: string; count: number }>>();
+
+    if (uniqueStudentIds.length && minAttendanceDate && maxAttendanceDate) {
+      const attendanceRows = await db
+        .select({
+          studentId: studentAttendances.studentId,
+          attendanceDate: studentAttendances.attendanceDate,
+          count: sql<number>`count(*)`,
+        })
+        .from(studentAttendances)
+        .where(
+          and(
+            inArray(studentAttendances.studentId, uniqueStudentIds),
+            eq(studentAttendances.status, "present"),
+            gte(studentAttendances.attendanceDate, minAttendanceDate),
+            lte(studentAttendances.attendanceDate, maxAttendanceDate),
+          ),
+        )
+        .groupBy(studentAttendances.studentId, studentAttendances.attendanceDate);
+
+      attendanceRows.forEach((attendanceRow) => {
+        const parsedAttendanceDate = parseDateOnly(attendanceRow.attendanceDate);
+        if (!parsedAttendanceDate) return;
+
+        const dateKey = toDateOnlyString(parsedAttendanceDate);
+        const existing = attendanceByStudentId.get(attendanceRow.studentId) ?? [];
+
+        existing.push({
+          date: dateKey,
+          count: Number(attendanceRow.count ?? 0),
+        });
+
+        attendanceByStudentId.set(attendanceRow.studentId, existing);
+      });
+    }
+
+    const presentAttendanceByEnrollmentKey = new Map<string, number>();
+
+    enrollmentRows.forEach((row) => {
+      const parsedTermStartDate = parseDateOnly(row.termStartDate);
+      const parsedTermEndDate = parseDateOnly(row.termEndDate);
+
+      if (!parsedTermStartDate || !parsedTermEndDate) {
+        presentAttendanceByEnrollmentKey.set(`${row.studentId}::${row.termId}`, 0);
+        return;
+      }
+
+      const termStartKey = toDateOnlyString(parsedTermStartDate);
+      const termEndKey = toDateOnlyString(parsedTermEndDate);
+      const presentAttendance = (attendanceByStudentId.get(row.studentId) ?? []).reduce((sum, attendance) => {
+        if (attendance.date < termStartKey || attendance.date > termEndKey) {
+          return sum;
+        }
+
+        return sum + attendance.count;
+      }, 0);
+
+      presentAttendanceByEnrollmentKey.set(`${row.studentId}::${row.termId}`, presentAttendance);
+    });
+
     const data = await Promise.all(
       enrollmentRows.map(async (row) => {
+        const termEndKey = parseDateOnly(row.termEndDate);
+        const nextTermStartDate = termEndKey
+          ? nextTermStartDateByEndDate.get(toDateOnlyString(termEndKey)) ?? null
+          : null;
+        const presentAttendance = presentAttendanceByEnrollmentKey.get(`${row.studentId}::${row.termId}`) ?? 0;
+        const totalWorkingDays = getWorkingDaysBetween(
+          row.termStartDate,
+          row.termEndDate,
+          Array.isArray(row.termHolidayDates)
+            ? row.termHolidayDates.filter((item): item is string => typeof item === "string")
+            : [],
+        );
+
         const assessmentRows = await db
           .select({
             id: continuousAssessments.id,
@@ -589,6 +775,7 @@ router.get("/overview", async (req, res) => {
             classMark: continuousAssessments.classMark,
             examMark: continuousAssessments.examMark,
             totalMark: continuousAssessments.totalMark,
+            grade: continuousAssessments.grade,
             subjectPosition: continuousAssessments.subjectPosition,
             remarks: continuousAssessments.remarks,
           })
@@ -614,6 +801,7 @@ router.get("/overview", async (req, res) => {
             id: row.classId,
             name: row.className,
             level: row.classLevel,
+            capacity: row.classCapacity,
           },
           academicYear: {
             id: row.academicYearId,
@@ -623,8 +811,12 @@ router.get("/overview", async (req, res) => {
             id: row.termId,
             name: row.termName,
             sequenceNumber: row.termSequenceNumber,
+            startDate: row.termStartDate,
+            endDate: row.termEndDate,
+            nextTermStartDate,
           },
           enrollmentDate: row.enrollmentDate,
+          attendance: `${presentAttendance} Out of ${totalWorkingDays}`,
           classPosition: row.classPosition,
           aggregate: row.aggregate,
           remarks: row.remarks,
@@ -727,32 +919,33 @@ router.post("/run-grades", async (req, res) => {
         ),
       );
 
+    const gradeByAssessmentId = new Map<number, string>();
     const subjectPositionByAssessmentId = new Map<number, string>();
     const subjectRemarkByAssessmentId = new Map<number, string>();
 
-    if (isUpperClass) {
-      const assessmentsBySubject = new Map<number, Array<{ id: number; score: number }>>();
+    const assessmentsBySubject = new Map<number, Array<{ id: number; score: number }>>();
 
-      for (const row of assessmentRows) {
-        const score = toScore(row.totalMark);
-        const existingRows = assessmentsBySubject.get(row.subjectId) ?? [];
-        existingRows.push({ id: row.id, score });
-        assessmentsBySubject.set(row.subjectId, existingRows);
-      }
+    for (const row of assessmentRows) {
+      const score = toScore(row.totalMark);
+      const existingRows = assessmentsBySubject.get(row.subjectId) ?? [];
+      existingRows.push({ id: row.id, score });
+      assessmentsBySubject.set(row.subjectId, existingRows);
 
-      for (const rows of assessmentsBySubject.values()) {
-        const ranks = getDenseRanks(rows);
-        for (const row of rows) {
-          const rank = ranks.get(row.id) ?? 0;
-          subjectPositionByAssessmentId.set(row.id, toOrdinal(rank));
-          subjectRemarkByAssessmentId.set(row.id, getUpperClassRemark(row.score));
-        }
-      }
-    } else {
-      for (const row of assessmentRows) {
-        const score = toScore(row.totalMark);
-        subjectPositionByAssessmentId.set(row.id, getLowerClassGrade(score));
-        subjectRemarkByAssessmentId.set(row.id, getLowerClassRemark(score));
+      gradeByAssessmentId.set(
+        row.id,
+        isUpperClass ? getUpperClassGrade(score) : getLowerClassGrade(score),
+      );
+      subjectRemarkByAssessmentId.set(
+        row.id,
+        isUpperClass ? getUpperClassRemark(score) : getLowerClassRemark(score),
+      );
+    }
+
+    for (const rows of assessmentsBySubject.values()) {
+      const ranks = getDenseRanks(rows);
+      for (const row of rows) {
+        const rank = ranks.get(row.id) ?? 0;
+        subjectPositionByAssessmentId.set(row.id, rank > 0 ? toOrdinal(rank) : "");
       }
     }
 
@@ -761,6 +954,7 @@ router.post("/run-grades", async (req, res) => {
         db
           .update(continuousAssessments)
           .set({
+            grade: gradeByAssessmentId.get(row.id) ?? getLowerClassGrade(toScore(row.totalMark)),
             subjectPosition: subjectPositionByAssessmentId.get(row.id) ?? null,
             remarks: subjectRemarkByAssessmentId.get(row.id) ?? null,
           })
@@ -773,29 +967,29 @@ router.post("/run-grades", async (req, res) => {
       {
         totalScore: number;
         subjectCount: number;
-        upperRanks: number[];
+        upperGradePoints: number[];
       }
     >();
 
     for (const assessment of assessmentRows) {
       const current =
         statsByStudentId.get(assessment.studentId) ??
-        ({ totalScore: 0, subjectCount: 0, upperRanks: [] } as const);
+        ({ totalScore: 0, subjectCount: 0, upperGradePoints: [] } as const);
 
       const score = toScore(assessment.totalMark);
       const next = {
         totalScore: current.totalScore + score,
         subjectCount: current.subjectCount + 1,
-        upperRanks: [...current.upperRanks],
+        upperGradePoints: [...current.upperGradePoints],
       };
 
       if (isUpperClass) {
-        const parsedRank = Number.parseInt(
-          subjectPositionByAssessmentId.get(assessment.id) ?? "",
+        const parsedGradePoint = Number.parseInt(
+          gradeByAssessmentId.get(assessment.id) ?? "",
           10,
         );
-        if (Number.isFinite(parsedRank) && parsedRank > 0) {
-          next.upperRanks.push(parsedRank);
+        if (Number.isFinite(parsedGradePoint) && parsedGradePoint > 0) {
+          next.upperGradePoints.push(parsedGradePoint);
         }
       }
 
@@ -816,8 +1010,10 @@ router.post("/run-grades", async (req, res) => {
         }
 
         const averageScore = stats.totalScore / stats.subjectCount;
-        const bestSixRanks = [...stats.upperRanks].sort((a, b) => a - b).slice(0, 6);
-        const aggregate = bestSixRanks.reduce((sum, rank) => sum + rank, 0);
+        const bestSixGrades = [...stats.upperGradePoints]
+          .sort((a, b) => a - b)
+          .slice(0, 6);
+        const aggregate = bestSixGrades.reduce((sum, gradePoint) => sum + gradePoint, 0);
 
         return {
           enrollmentId: enrollment.id,
@@ -855,16 +1051,40 @@ router.post("/run-grades", async (req, res) => {
             .set({
               classPosition: classRank > 0 ? toOrdinal(classRank) : null,
               remarks: getUpperClassRemark(row.averageScore),
-              aggregate: row.aggregate.toFixed(2),
+              aggregate: row.aggregate.toString(),
             })
             .where(eq(studentClassEnrollments.id, row.enrollmentId));
         }),
       );
     } else {
+      const lowerResults = enrollmentRows.map((enrollment) => {
+        const stats = statsByStudentId.get(enrollment.studentId);
+
+        if (!stats || stats.subjectCount === 0) {
+          return {
+            enrollmentId: enrollment.id,
+            hasStats: false,
+            averageScore: 0,
+          };
+        }
+
+        return {
+          enrollmentId: enrollment.id,
+          hasStats: true,
+          averageScore: stats.totalScore / stats.subjectCount,
+        };
+      });
+
+      const lowerRankMap = getDenseRanks(
+        lowerResults
+          .filter((row) => row.hasStats)
+          .map((row) => ({ id: row.enrollmentId, score: row.averageScore })),
+        "desc",
+      );
+
       await Promise.all(
-        enrollmentRows.map(async (enrollment) => {
-          const stats = statsByStudentId.get(enrollment.studentId);
-          if (!stats || stats.subjectCount === 0) {
+        lowerResults.map(async (row) => {
+          if (!row.hasStats) {
             await db
               .update(studentClassEnrollments)
               .set({
@@ -872,20 +1092,20 @@ router.post("/run-grades", async (req, res) => {
                 remarks: null,
                 aggregate: null,
               })
-              .where(eq(studentClassEnrollments.id, enrollment.id));
+              .where(eq(studentClassEnrollments.id, row.enrollmentId));
             return;
           }
 
-          const averageScore = stats.totalScore / stats.subjectCount;
+          const classRank = lowerRankMap.get(row.enrollmentId) ?? 0;
 
           await db
             .update(studentClassEnrollments)
             .set({
-              classPosition: getLowerClassGrade(averageScore),
-              remarks: getLowerClassRemark(averageScore),
+              classPosition: classRank > 0 ? toOrdinal(classRank) : null,
+              remarks: getLowerClassRemark(row.averageScore),
               aggregate: null,
             })
-            .where(eq(studentClassEnrollments.id, enrollment.id));
+            .where(eq(studentClassEnrollments.id, row.enrollmentId));
         }),
       );
     }

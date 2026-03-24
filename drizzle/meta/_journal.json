@@ -5,64 +5,29 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773145158568,
-      "tag": "0000_melted_gorilla_man",
+      "when": 1773827226426,
+      "tag": "0000_lazy_warstar",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1773217799445,
-      "tag": "0001_breezy_dust",
+      "when": 1774095533860,
+      "tag": "0001_outgoing_stature",
       "breakpoints": true
     },
     {
       "idx": 2,
       "version": "7",
-      "when": 1773301280442,
-      "tag": "0002_small_mother_askani",
+      "when": 1774300000000,
+      "tag": "0002_term_holiday_dates",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "7",
-      "when": 1773413723154,
-      "tag": "0003_sour_riptide",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1773416131761,
-      "tag": "0004_groovy_justice",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1773500000000,
-      "tag": "0005_awesome_fee_type_update",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1773586336386,
-      "tag": "0006_old_tempest",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1773657600000,
-      "tag": "0007_term_unique_enrollment",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1773660600000,
-      "tag": "0008_fee_once_and_term_scope",
+      "when": 1774300000001,
+      "tag": "0003_school_discount_amount_check",
       "breakpoints": true
     }
   ]

@@ -37,7 +37,7 @@ type SeedUser = {
   id: string;
   name: string;
   email: string;
-  role: "student" | "teacher" | "admin";
+  role: "staff" | "teacher" | "admin";
   password: string;
   image: string;
   imageCldPubId: string;
@@ -61,6 +61,7 @@ type SeedStaff = {
   firstName: string;
   lastName: string;
   email: string;
+  registrationNumber?: string;
   phone: string;
   dateOfBirth: string;
   gender: "male" | "female" | "other";
@@ -165,7 +166,7 @@ type SeedFee = {
   name: string;
   description: string;
   amount: string;
-  feeType: "admission" | "promotion" | "tuition" | "other";
+  feeType: "admission" | "tuition" | "feeding" | "other";
   academicYearId: number;
   applicableToLevel: string | null;
 };
@@ -232,6 +233,7 @@ type SeedContinuousAssessment = {
   classMark: string;
   examMark: string;
   totalMark: string;
+  grade: string;
   subjectPosition: number | null;
   remarks: string | null;
 };
@@ -476,6 +478,7 @@ const seed = async () => {
           firstName: s.firstName,
           lastName: s.lastName,
           email: s.email,
+          registrationNumber: s.registrationNumber,
           phone: s.phone,
           dateOfBirth: s.dateOfBirth,
           gender: s.gender || "other",
@@ -738,7 +741,7 @@ const seed = async () => {
       academicYearId: number;
       termId: number;
       enrollmentDate: string;
-      classPosition: number | null;
+      classPosition: string | null;
       remarks: string | null;
     }> = [];
 
@@ -776,7 +779,8 @@ const seed = async () => {
           academicYearId: mappedAcademicYearId,
           termId: mappedTermId,
           enrollmentDate: sce.enrollmentDate,
-          classPosition: sce.classPosition,
+          classPosition:
+            sce.classPosition === null ? null : String(sce.classPosition),
           remarks: sce.remarks,
         });
       }
@@ -1177,6 +1181,7 @@ const seed = async () => {
           classMark: ca.classMark,
           examMark: ca.examMark,
           totalMark: ca.totalMark,
+          grade: ca.grade,
           subjectPosition: ca.subjectPosition,
           remarks: ca.remarks,
         };

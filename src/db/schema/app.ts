@@ -11,8 +11,10 @@ import {
   uniqueIndex,
   primaryKey,
   pgEnum,
+  jsonb,
+  check,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // ============= ENUMS =============
 export const staffTypeEnum = pgEnum("staff_type", ["teacher", "non_teaching"]);
@@ -53,6 +55,7 @@ export const terms = pgTable("terms", {
   academicYearId: integer("academic_year_id").notNull().references(() => academicYears.id),
   startDate: date("start_date").notNull(),
   endDate: date("end_date").notNull(),
+  holidayDates: jsonb("holiday_dates").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -328,6 +331,7 @@ export const continuousAssessments = pgTable("continuous_assessments", {
   classMark: numeric("class_mark", { precision: 5, scale: 2 }).notNull(),
   examMark: numeric("exam_mark", { precision: 5, scale: 2 }).notNull(),
   totalMark: numeric("total_mark", { precision: 5, scale: 2 }).notNull(),
+  grade: varchar("grade", { length: 10}),
   subjectPosition: varchar("subject_position", { length: 10 }), // Position in the subject for the term
   remarks: text("remarks"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -496,19 +500,31 @@ export const staffAttendances = pgTable(
   })
 );
 
-export const schoolDetails = pgTable("school_details", {
-  id: serial("id").primaryKey(),
-  name: varchar("name", { length: 100 }).notNull(),
-  address: varchar("address", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 20 }).notNull(),
-  email: varchar("email", { length: 100 }).notNull(),
-  website: varchar("website", { length: 255 }),
-  logo: varchar("logo", { length: 255 }),
-  discountType: discountTypeEnum("discount_type").notNull(),
-  discountAmount: numeric("discount_amount", { precision: 5, scale: 2 }).notNull().default("0"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
+export const schoolDetails = pgTable(
+  "school_details",
+  {
+    id: serial("id").primaryKey(),
+    name: varchar("name", { length: 100 }).notNull(),
+    address: varchar("address", { length: 255 }).notNull(),
+    phone: varchar("phone", { length: 20 }).notNull(),
+    email: varchar("email", { length: 100 }).notNull(),
+    website: varchar("website", { length: 255 }),
+    logo: varchar("logo", { length: 255 }),
+    discountType: discountTypeEnum("discount_type").notNull(),
+    discountAmount: numeric("discount_amount", { precision: 5, scale: 2 }).notNull().default("0"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (table) => [
+    check(
+      "chk_discount_amount_by_type",
+      sql`(
+        (${table.discountType} = 'percentage' and ${table.discountAmount} between 0 and 100)
+        or (${table.discountType} = 'value' and ${table.discountAmount} >= 0)
+      )`
+    ),
+  ]
+);
 // ============= RELATIONS =============
 
 export const academicYearsRelations = relations(academicYears, ({ many }) => ({

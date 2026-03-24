@@ -5,6 +5,53 @@ import { terms } from "../db/schema";
 
 const router = express.Router();
 
+const normalizeDateOnly = (value: unknown) => {
+  if (typeof value !== "string") return null;
+
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return null;
+  }
+
+  const parsed = new Date(`${trimmed}T00:00:00Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  return parsed.toISOString().slice(0, 10) === trimmed ? trimmed : null;
+};
+
+const parseHolidayDates = (value: unknown) => {
+  if (value === undefined || value === null || value === "") {
+    return [] as string[];
+  }
+
+  const rawValues =
+    typeof value === "string"
+      ? value
+          .split(/[\n,]/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      : Array.isArray(value)
+        ? value
+            .map((item) => (typeof item === "string" ? item.trim() : ""))
+            .filter(Boolean)
+        : null;
+
+  if (!rawValues) {
+    return null;
+  }
+
+  const normalizedValues = rawValues.map(normalizeDateOnly);
+  if (normalizedValues.some((item) => !item)) {
+    return null;
+  }
+
+  return [...new Set(normalizedValues as string[])].sort((a, b) => a.localeCompare(b));
+};
+
 router.get("/", async (req, res) => {
   try {
     const data = await db.select().from(terms);
@@ -49,13 +96,14 @@ router.get("/:id", async (req, res) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, sequenceNumber, academicYearId, startDate, endDate } = req.body;
+    const { name, sequenceNumber, academicYearId, startDate, endDate, holidayDates } = req.body;
 
     const normalizedName = typeof name === "string" ? name.trim() : "";
     const parsedSequenceNumber = Number.parseInt(String(sequenceNumber), 10);
     const parsedAcademicYearId = Number.parseInt(String(academicYearId), 10);
     const normalizedStartDate = typeof startDate === "string" ? startDate.trim() : "";
     const normalizedEndDate = typeof endDate === "string" ? endDate.trim() : "";
+    const parsedHolidayDates = parseHolidayDates(holidayDates);
 
     if (!normalizedName) {
       return res.status(400).json({ success: false, error: "name is required" });
@@ -82,6 +130,24 @@ router.post("/", async (req, res) => {
       });
     }
 
+    if (!parsedHolidayDates) {
+      return res.status(400).json({
+        success: false,
+        error: "holidayDates must be an array of valid YYYY-MM-DD dates",
+      });
+    }
+
+    const hasOutOfRangeHoliday = parsedHolidayDates.some(
+      (holidayDate) => holidayDate < normalizedStartDate || holidayDate > normalizedEndDate,
+    );
+
+    if (hasOutOfRangeHoliday) {
+      return res.status(400).json({
+        success: false,
+        error: "Each holiday date must be within the term start and end dates",
+      });
+    }
+
     const [created] = await db
       .insert(terms)
       .values({
@@ -90,6 +156,7 @@ router.post("/", async (req, res) => {
         academicYearId: parsedAcademicYearId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
+        holidayDates: parsedHolidayDates,
       })
       .returning();
 
@@ -107,7 +174,7 @@ router.post("/", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const id = Number.parseInt(req.params.id, 10);
-    const { name, sequenceNumber, academicYearId, startDate, endDate } = req.body;
+    const { name, sequenceNumber, academicYearId, startDate, endDate, holidayDates } = req.body;
 
     if (!Number.isFinite(id) || id <= 0) {
       return res.status(400).json({ success: false, error: "Invalid term id" });
@@ -118,6 +185,7 @@ router.put("/:id", async (req, res) => {
     const parsedAcademicYearId = Number.parseInt(String(academicYearId), 10);
     const normalizedStartDate = typeof startDate === "string" ? startDate.trim() : "";
     const normalizedEndDate = typeof endDate === "string" ? endDate.trim() : "";
+    const parsedHolidayDates = parseHolidayDates(holidayDates);
 
     if (!normalizedName) {
       return res.status(400).json({ success: false, error: "name is required" });
@@ -141,6 +209,24 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({
         success: false,
         error: "startDate and endDate are required",
+      });
+    }
+
+    if (!parsedHolidayDates) {
+      return res.status(400).json({
+        success: false,
+        error: "holidayDates must be an array of valid YYYY-MM-DD dates",
+      });
+    }
+
+    const hasOutOfRangeHoliday = parsedHolidayDates.some(
+      (holidayDate) => holidayDate < normalizedStartDate || holidayDate > normalizedEndDate,
+    );
+
+    if (hasOutOfRangeHoliday) {
+      return res.status(400).json({
+        success: false,
+        error: "Each holiday date must be within the term start and end dates",
       });
     }
 
@@ -161,6 +247,7 @@ router.put("/:id", async (req, res) => {
         academicYearId: parsedAcademicYearId,
         startDate: normalizedStartDate,
         endDate: normalizedEndDate,
+        holidayDates: parsedHolidayDates,
       })
       .where(eq(terms.id, id))
       .returning();
