@@ -23,12 +23,12 @@ const securityMiddleware = async (
         break;
       case "teacher":
       case "staff":
-        limit = 50;
+        limit = 20;
         message =
           "User request limit exceeded (50 per minute). Please wait before making another request.";
         break;
       default:
-        limit = 50;
+        limit = 5;
         message =
           "Guest request limit exceeded (50 per minute). Please sign up for higher limits or wait before making another request.";
         break;

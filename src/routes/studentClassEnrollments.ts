@@ -642,32 +642,118 @@ router.get("/overview", async (req, res) => {
       .innerJoin(academicYears, eq(studentClassEnrollments.academicYearId, academicYears.id))
       .innerJoin(terms, eq(studentClassEnrollments.termId, terms.id))
       .where(whereClause)
-      .orderBy(desc(academicYears.year), classes.name, terms.sequenceNumber, students.firstName)
+      .orderBy(desc(academicYears.startDate), classes.name, terms.sequenceNumber, students.firstName)
       .limit(limitPerPage)
       .offset(offset);
 
+    const termEndKeys = [...new Set(
+      enrollmentRows
+        .map((row) => {
+          const parsed = parseDateOnly(row.termEndDate);
+          return parsed ? toDateOnlyString(parsed) : null;
+        })
+        .filter((value): value is string => Boolean(value)),
+    )].sort();
+
+    const nextTermStartDateByEndDate = new Map<string, string | null>();
+
+    if (termEndKeys.length) {
+      const nextTermCandidates = await db
+        .select({ startDate: terms.startDate })
+        .from(terms)
+        .where(gt(terms.startDate, termEndKeys[0]!))
+        .orderBy(asc(terms.startDate));
+
+      const candidateStartDates = nextTermCandidates
+        .map((row) => {
+          const parsed = parseDateOnly(row.startDate);
+          return parsed ? toDateOnlyString(parsed) : null;
+        })
+        .filter((value): value is string => Boolean(value));
+
+      termEndKeys.forEach((termEndKey) => {
+        const nextStartDate = candidateStartDates.find((startDate) => startDate > termEndKey) ?? null;
+        nextTermStartDateByEndDate.set(termEndKey, nextStartDate);
+      });
+    }
+
+    const uniqueStudentIds = [...new Set(enrollmentRows.map((row) => row.studentId))];
+    const termStartKeys = enrollmentRows
+      .map((row) => {
+        const parsed = parseDateOnly(row.termStartDate);
+        return parsed ? toDateOnlyString(parsed) : null;
+      })
+      .filter((value): value is string => Boolean(value));
+    const minAttendanceDate = termStartKeys.length ? termStartKeys.reduce((min, value) => (value < min ? value : min)) : null;
+    const maxAttendanceDate = termEndKeys.length ? termEndKeys.reduce((max, value) => (value > max ? value : max)) : null;
+
+    const attendanceByStudentId = new Map<number, Array<{ date: string; count: number }>>();
+
+    if (uniqueStudentIds.length && minAttendanceDate && maxAttendanceDate) {
+      const attendanceRows = await db
+        .select({
+          studentId: studentAttendances.studentId,
+          attendanceDate: studentAttendances.attendanceDate,
+          count: sql<number>`count(*)`,
+        })
+        .from(studentAttendances)
+        .where(
+          and(
+            inArray(studentAttendances.studentId, uniqueStudentIds),
+            eq(studentAttendances.status, "present"),
+            gte(studentAttendances.attendanceDate, minAttendanceDate),
+            lte(studentAttendances.attendanceDate, maxAttendanceDate),
+          ),
+        )
+        .groupBy(studentAttendances.studentId, studentAttendances.attendanceDate);
+
+      attendanceRows.forEach((attendanceRow) => {
+        const parsedAttendanceDate = parseDateOnly(attendanceRow.attendanceDate);
+        if (!parsedAttendanceDate) return;
+
+        const dateKey = toDateOnlyString(parsedAttendanceDate);
+        const existing = attendanceByStudentId.get(attendanceRow.studentId) ?? [];
+
+        existing.push({
+          date: dateKey,
+          count: Number(attendanceRow.count ?? 0),
+        });
+
+        attendanceByStudentId.set(attendanceRow.studentId, existing);
+      });
+    }
+
+    const presentAttendanceByEnrollmentKey = new Map<string, number>();
+
+    enrollmentRows.forEach((row) => {
+      const parsedTermStartDate = parseDateOnly(row.termStartDate);
+      const parsedTermEndDate = parseDateOnly(row.termEndDate);
+
+      if (!parsedTermStartDate || !parsedTermEndDate) {
+        presentAttendanceByEnrollmentKey.set(`${row.studentId}::${row.termId}`, 0);
+        return;
+      }
+
+      const termStartKey = toDateOnlyString(parsedTermStartDate);
+      const termEndKey = toDateOnlyString(parsedTermEndDate);
+      const presentAttendance = (attendanceByStudentId.get(row.studentId) ?? []).reduce((sum, attendance) => {
+        if (attendance.date < termStartKey || attendance.date > termEndKey) {
+          return sum;
+        }
+
+        return sum + attendance.count;
+      }, 0);
+
+      presentAttendanceByEnrollmentKey.set(`${row.studentId}::${row.termId}`, presentAttendance);
+    });
+
     const data = await Promise.all(
       enrollmentRows.map(async (row) => {
-        const [nextTermRow] = await db
-          .select({ startDate: terms.startDate })
-          .from(terms)
-          .where(gt(terms.startDate, row.termEndDate))
-          .orderBy(asc(terms.startDate))
-          .limit(1);
-
-        const [attendanceCountRow] = await db
-          .select({ count: sql<number>`count(*)` })
-          .from(studentAttendances)
-          .where(
-            and(
-              eq(studentAttendances.studentId, row.studentId),
-              eq(studentAttendances.status, "present"),
-              gte(studentAttendances.attendanceDate, row.termStartDate),
-              lte(studentAttendances.attendanceDate, row.termEndDate),
-            ),
-          );
-
-        const presentAttendance = Number(attendanceCountRow?.count ?? 0);
+        const termEndKey = parseDateOnly(row.termEndDate);
+        const nextTermStartDate = termEndKey
+          ? nextTermStartDateByEndDate.get(toDateOnlyString(termEndKey)) ?? null
+          : null;
+        const presentAttendance = presentAttendanceByEnrollmentKey.get(`${row.studentId}::${row.termId}`) ?? 0;
         const totalWorkingDays = getWorkingDaysBetween(
           row.termStartDate,
           row.termEndDate,
@@ -727,7 +813,7 @@ router.get("/overview", async (req, res) => {
             sequenceNumber: row.termSequenceNumber,
             startDate: row.termStartDate,
             endDate: row.termEndDate,
-            nextTermStartDate: nextTermRow?.startDate ?? null,
+            nextTermStartDate,
           },
           enrollmentDate: row.enrollmentDate,
           attendance: `${presentAttendance} Out of ${totalWorkingDays}`,

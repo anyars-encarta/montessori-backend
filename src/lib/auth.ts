@@ -42,6 +42,9 @@ const transporter = hasSmtpConfig
     })
   : null;
 
+const escapeHtml = (str: string) =>
+  str.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c] ?? c));
+
 const sendResetPasswordEmail = async (user: { email: string; name?: string | null }, url: string) => {
   if (!hasSmtpConfig || !transporter) {
     const message =
@@ -61,9 +64,9 @@ const sendResetPasswordEmail = async (user: { email: string; name?: string | nul
       to: user.email,
       subject: "Reset your password",
       html: `
-        <p>Hello ${user.name ?? "there"},</p>
+        <p>Hello ${escapeHtml(user.name ?? "there")},</p>
         <p>Click the link below to reset your password. The link expires in 1 hour.</p>
-        <p><a href="${url}">Reset Password</a></p>
+        <p><a href="${escapeHtml(url)}">Reset Password</a></p>
         <p>If you did not request a password reset, you can ignore this email.</p>
       `,
     });

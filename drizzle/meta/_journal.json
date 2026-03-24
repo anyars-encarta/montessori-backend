@@ -22,6 +22,13 @@
       "when": 1774300000000,
       "tag": "0002_term_holiday_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1774300000001,
+      "tag": "0003_school_discount_amount_check",
+      "breakpoints": true
     }
   ]
 }

@@ -12,7 +12,9 @@ const parsePositiveInt = (value: unknown) => {
   return parsed;
 };
 
-const isValidRole = (value: unknown): value is "staff" | "teacher" | "admin" => {
+const isValidRole = (
+  value: unknown,
+): value is "staff" | "teacher" | "admin" => {
   return value === "staff" || value === "teacher" || value === "admin";
 };
 
@@ -25,18 +27,22 @@ router.get("/", async (req, res) => {
 
     const searchRaw = req.query.search;
     const search =
-      typeof searchRaw === "string" && searchRaw.trim() ? searchRaw.trim() : null;
+      typeof searchRaw === "string" && searchRaw.trim()
+        ? searchRaw.trim()
+        : null;
 
     const roleRaw = req.query.role;
     const role = isValidRole(roleRaw) ? roleRaw : null;
 
     const conditions = [];
+    const escapeIlike = (str: string) =>
+      str.replace(/[%_\\]/g, (c) => `\\${c}`);
 
     if (search) {
       conditions.push(
         or(
-          ilike(user.name, `%${search}%`),
-          ilike(user.email, `%${search}%`),
+          ilike(user.name, `%${escapeIlike(search)}%`),
+          ilike(user.email, `%${escapeIlike(search)}%`),
         ),
       );
     }
@@ -65,10 +71,7 @@ router.get("/", async (req, res) => {
         .orderBy(desc(user.createdAt))
         .limit(limit)
         .offset(offset),
-      db
-        .select({ total: count() })
-        .from(user)
-        .where(where),
+      db.select({ total: count() }).from(user).where(where),
     ]);
 
     const total = Number(totalRows[0]?.total ?? 0);
@@ -85,7 +88,9 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("GET /api/users error:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch users." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch users." });
   }
 });
 
@@ -117,7 +122,9 @@ router.get("/:id", async (req, res) => {
     return res.json({ success: true, data: found });
   } catch (error) {
     console.error("GET /api/users/:id error:", error);
-    return res.status(500).json({ success: false, error: "Failed to fetch user." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to fetch user." });
   }
 });
 
@@ -126,6 +133,15 @@ router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const isSelf = req.user?.id === id;
+    const isAdmin = req.user?.role === "admin";
+
+    // Only admins can update other users
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: "You can only update your own profile.",
+      });
+    }
 
     const [found] = await db
       .select({ id: user.id, email: user.email })
@@ -235,14 +251,16 @@ router.put("/:id", async (req, res) => {
         .update(account)
         .set(accountSetData)
         .where(
-          and(eq(account.userId, id), eq(account.providerId, "credential")),
+          and(eq(account.userId, id), eq(account.providerId, "credentials")),
         );
     }
 
     return res.json({ success: true, data: updated });
   } catch (error) {
     console.error("PUT /api/users/:id error:", error);
-    return res.status(500).json({ success: false, error: "Failed to update user." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to update user." });
   }
 });
 
@@ -250,6 +268,14 @@ router.put("/:id", async (req, res) => {
 router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Only admins can delete users
+    if (req.user?.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        error: "Only administrators can delete users.",
+      });
+    }
 
     // Prevent self-deletion
     if (req.user?.id === id) {
@@ -274,7 +300,9 @@ router.delete("/:id", async (req, res) => {
     return res.json({ success: true, message: "User deleted successfully." });
   } catch (error) {
     console.error("DELETE /api/users/:id error:", error);
-    return res.status(500).json({ success: false, error: "Failed to delete user." });
+    return res
+      .status(500)
+      .json({ success: false, error: "Failed to delete user." });
   }
 });
 

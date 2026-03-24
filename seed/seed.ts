@@ -61,6 +61,7 @@ type SeedStaff = {
   firstName: string;
   lastName: string;
   email: string;
+  registrationNumber?: string;
   phone: string;
   dateOfBirth: string;
   gender: "male" | "female" | "other";
@@ -477,6 +478,7 @@ const seed = async () => {
           firstName: s.firstName,
           lastName: s.lastName,
           email: s.email,
+          registrationNumber: s.registrationNumber,
           phone: s.phone,
           dateOfBirth: s.dateOfBirth,
           gender: s.gender || "other",
