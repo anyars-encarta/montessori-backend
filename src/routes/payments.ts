@@ -1,7 +1,7 @@
 import express from "express";
 import { and, desc, eq, gte, ilike, lte, ne, or, sql } from "drizzle-orm";
-import { db } from "../db";
-import { payments, studentFees, students } from "../db/schema";
+import { db } from '../db/index.js';
+import { payments, studentFees, students } from '../db/schema/index.js';
 
 const router = express.Router();
 

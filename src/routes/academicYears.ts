@@ -1,6 +1,6 @@
 import express from "express";
-import { db } from "../db";
-import { academicYears } from "../db/schema";
+import { db } from '../db/index.js';
+import { academicYears } from '../db/schema/index.js';
 import { eq } from "drizzle-orm";
 
 const router = express.Router();

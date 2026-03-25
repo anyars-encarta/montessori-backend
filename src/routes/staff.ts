@@ -1,6 +1,6 @@
 import express from "express";
 import { and, desc, eq, ilike, inArray, or, sql } from "drizzle-orm";
-import { db } from "../db";
+import { db } from '../db/index.js';
 import {
   classes,
   expenseCategories,
@@ -9,7 +9,7 @@ import {
   staffAttendances,
   staffSubjects,
   subjects,
-} from "../db/schema";
+} from '../db/schema/index.js';
 
 const router = express.Router();
 

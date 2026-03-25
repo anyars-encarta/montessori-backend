@@ -1,6 +1,6 @@
 import express from "express";
 import { and, desc, eq, ilike, inArray, sql } from "drizzle-orm";
-import { db } from "../db";
+import { db } from '../db/index.js';
 import {
   academicYears,
   classSubjects,
@@ -11,7 +11,7 @@ import {
   students,
   subjects,
   terms,
-} from "../db/schema";
+} from '../db/schema/index.js';
 
 const router = express.Router();
 
