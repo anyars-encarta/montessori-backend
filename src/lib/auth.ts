@@ -6,7 +6,10 @@ import * as schema from "../db/schema/auth.js";
 import { z } from "zod";
 
 const secret = process.env.BETTER_AUTH_SECRET!;
-const frontendUrl = process.env.FRONTEND_URL!;
+const frontendUrls = (process.env.FRONTEND_URL ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => Boolean(origin));
 const authBaseUrl =
   process.env.BETTER_AUTH_URL
     ?.trim()
@@ -15,7 +18,7 @@ const authBaseUrl =
 const RoleEnum = z.enum(["staff", "teacher", "admin"]);
 
 if (!secret) throw new Error("BETTER_AUTH_SECRET is not set in the .env file");
-if (!frontendUrl) throw new Error("FRONTEND_URL is not set in the .env file");
+if (!frontendUrls.length) throw new Error("FRONTEND_URL is not set in the .env file");
 
 const isProduction = process.env.NODE_ENV === "production";
 const smtpHost = process.env.SMTP_HOST;
@@ -90,7 +93,7 @@ const sendResetPasswordEmail = async (user: { email: string; name?: string | nul
 export const auth = betterAuth({
   secret,
   baseURL: authBaseUrl,
-  trustedOrigins: [frontendUrl],
+  trustedOrigins: frontendUrls,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,

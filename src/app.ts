@@ -31,7 +31,10 @@ import { auth } from "./lib/auth.js";
 
 const app = express();
 
-const configuredFrontendUrl = process.env.FRONTEND_URL?.trim();
+const configuredFrontendUrls = (process.env.FRONTEND_URL ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter((origin) => Boolean(origin));
 
 const allowedOrigins = new Set<string>([
   "http://localhost:5173",
@@ -40,9 +43,9 @@ const allowedOrigins = new Set<string>([
   "http://127.0.0.1:4173",
 ]);
 
-if (configuredFrontendUrl) {
-  allowedOrigins.add(configuredFrontendUrl);
-}
+configuredFrontendUrls.forEach((origin) => {
+  allowedOrigins.add(origin);
+});
 
 app.use(
   cors({
