@@ -1,5 +1,5 @@
 {
-  "id": "c037cf5b-34c3-4372-886e-fb641833a30f",
+  "id": "b6c39b5a-e30b-4cd5-ae05-ac5fc589c2fa",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "7",
   "dialect": "postgresql",
@@ -277,6 +277,12 @@
           "type": "numeric(5, 2)",
           "primaryKey": false,
           "notNull": true
+        },
+        "grade": {
+          "name": "grade",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false
         },
         "subject_position": {
           "name": "subject_position",
@@ -1242,6 +1248,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "supervisor_signature_url": {
+          "name": "supervisor_signature_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
         "discount_type": {
           "name": "discount_type",
           "type": "discount_type",
@@ -1276,7 +1288,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "chk_discount_amount_by_type": {
+          "name": "chk_discount_amount_by_type",
+          "value": "(\n        (\"school_details\".\"discount_type\" = 'percentage' and \"school_details\".\"discount_amount\" between 0 and 100)\n        or (\"school_details\".\"discount_type\" = 'value' and \"school_details\".\"discount_amount\" >= 0)\n      )"
+        }
+      },
       "isRLSEnabled": false
     },
     "public.staff": {
@@ -1689,6 +1706,18 @@
         "aggregate": {
           "name": "aggregate",
           "type": "numeric(8, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "class_teacher_signature_url": {
+          "name": "class_teacher_signature_url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "general_comments": {
+          "name": "general_comments",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },
@@ -2273,6 +2302,13 @@
           "type": "date",
           "primaryKey": false,
           "notNull": true
+        },
+        "holiday_dates": {
+          "name": "holiday_dates",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
         },
         "created_at": {
           "name": "created_at",

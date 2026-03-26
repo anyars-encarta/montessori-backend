@@ -46,6 +46,7 @@ CREATE TABLE "continuous_assessments" (
 	"class_mark" numeric(5, 2) NOT NULL,
 	"exam_mark" numeric(5, 2) NOT NULL,
 	"total_mark" numeric(5, 2) NOT NULL,
+	"grade" varchar(10),
 	"subject_position" varchar(10),
 	"remarks" text,
 	"created_at" timestamp DEFAULT now() NOT NULL,
@@ -167,10 +168,15 @@ CREATE TABLE "school_details" (
 	"email" varchar(100) NOT NULL,
 	"website" varchar(255),
 	"logo" varchar(255),
+	"supervisor_signature_url" text,
 	"discount_type" "discount_type" NOT NULL,
 	"discount_amount" numeric(5, 2) DEFAULT '0' NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "chk_discount_amount_by_type" CHECK ((
+        ("school_details"."discount_type" = 'percentage' and "school_details"."discount_amount" between 0 and 100)
+        or ("school_details"."discount_type" = 'value' and "school_details"."discount_amount" >= 0)
+      ))
 );
 --> statement-breakpoint
 CREATE TABLE "staff" (
@@ -227,6 +233,8 @@ CREATE TABLE "student_class_enrollments" (
 	"class_position" varchar(10),
 	"remarks" text,
 	"aggregate" numeric(8, 2),
+	"class_teacher_signature_url" text,
+	"general_comments" text,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
@@ -294,6 +302,7 @@ CREATE TABLE "terms" (
 	"academic_year_id" integer NOT NULL,
 	"start_date" date NOT NULL,
 	"end_date" date NOT NULL,
+	"holiday_dates" jsonb DEFAULT '[]'::jsonb NOT NULL,
 	"created_at" timestamp DEFAULT now() NOT NULL
 );
 --> statement-breakpoint

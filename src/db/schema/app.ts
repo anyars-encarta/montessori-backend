@@ -299,7 +299,6 @@ export const studentClassEnrollments = pgTable(
     aggregate: numeric("aggregate", { precision: 8, scale: 2 }), // Aggregate of best 6 subjects
     classTeacherSignatureUrl: text("class_teacher_signature_url"),
     generalComments: text("general_comments"),
-    supervisorSignatureUrl: text("supervisor_signature_url"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
@@ -513,6 +512,7 @@ export const schoolDetails = pgTable(
     email: varchar("email", { length: 100 }).notNull(),
     website: varchar("website", { length: 255 }),
     logo: varchar("logo", { length: 255 }),
+    supervisorSignatureUrl: text("supervisor_signature_url"),
     discountType: discountTypeEnum("discount_type").notNull(),
     discountAmount: numeric("discount_amount", { precision: 5, scale: 2 }).notNull().default("0"),
     createdAt: timestamp("created_at").notNull().defaultNow(),

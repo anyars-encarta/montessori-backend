@@ -1,1 +1,0 @@
-ALTER TABLE "continuous_assessments" ADD COLUMN "grade" varchar(10);

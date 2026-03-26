@@ -5,36 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1773827226426,
-      "tag": "0000_lazy_warstar",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1774095533860,
-      "tag": "0001_outgoing_stature",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1774300000000,
-      "tag": "0002_term_holiday_dates",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1774300000001,
-      "tag": "0003_school_discount_amount_check",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1774531402423,
-      "tag": "0004_fat_hiroim",
+      "when": 1774542603630,
+      "tag": "0000_chubby_thanos",
       "breakpoints": true
     }
   ]
