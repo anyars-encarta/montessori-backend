@@ -297,6 +297,9 @@ export const studentClassEnrollments = pgTable(
     classPosition: varchar("class_position", { length: 10 }), // Position in the class for the term
     remarks: text("remarks"),
     aggregate: numeric("aggregate", { precision: 8, scale: 2 }), // Aggregate of best 6 subjects
+    classTeacherSignatureUrl: text("class_teacher_signature_url"),
+    generalComments: text("general_comments"),
+    supervisorSignatureUrl: text("supervisor_signature_url"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
   (table) => ({
