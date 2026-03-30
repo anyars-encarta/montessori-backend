@@ -27,7 +27,7 @@ import {
   students,
   subjects,
   terms,
-  user,
+  // user,
   schoolDetails,
 } from "../src/db/schema";
 
@@ -58,7 +58,7 @@ const seed = async () => {
   await db.delete(academicYears);
   await db.delete(session);
   await db.delete(account);
-  await db.delete(user);
+  // await db.delete(user);
   await db.delete(schoolDetails);
 };
 
