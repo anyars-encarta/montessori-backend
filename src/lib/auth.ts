@@ -10,6 +10,17 @@ const frontendUrls = (process.env.FRONTEND_URL ?? "")
   .split(",")
   .map((origin) => origin.trim())
   .filter((origin) => Boolean(origin));
+const defaultTrustedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:5174",
+  "http://localhost:4173",
+  "http://localhost:4174",
+  "http://127.0.0.1:4173",
+  "http://127.0.0.1:4174",
+];
+const trustedOrigins = [...new Set([...defaultTrustedOrigins, ...frontendUrls])];
 const authBaseUrl =
   process.env.BETTER_AUTH_URL
     ?.trim()
@@ -18,7 +29,7 @@ const authBaseUrl =
 const RoleEnum = z.enum(["staff", "teacher", "admin"]);
 
 if (!secret) throw new Error("BETTER_AUTH_SECRET is not set in the .env file");
-if (!frontendUrls.length) throw new Error("FRONTEND_URL is not set in the .env file");
+if (!trustedOrigins.length) throw new Error("FRONTEND_URL is not set in the .env file");
 
 const isProduction = process.env.NODE_ENV === "production";
 const smtpHost = process.env.SMTP_HOST;
@@ -93,7 +104,7 @@ const sendResetPasswordEmail = async (user: { email: string; name?: string | nul
 export const auth = betterAuth({
   secret,
   baseURL: authBaseUrl,
-  trustedOrigins: frontendUrls,
+  trustedOrigins,
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
