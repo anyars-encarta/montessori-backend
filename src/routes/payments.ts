@@ -75,6 +75,17 @@ const derivePaymentStatus = (amount: string, amountPaid: string) => {
   return "partial" as const;
 };
 
+const isForeignKeyViolation = (error: unknown) => {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  return (
+    "code" in error &&
+    String((error as { code?: unknown }).code ?? "") === "23503"
+  );
+};
+
 const reconcileStudentFeePayment = async (studentFeeId: number) => {
   const [feeRow] = await db
     .select({
@@ -618,6 +629,14 @@ router.delete("/:id", async (req, res) => {
 
     return res.status(200).json({ success: true, data: {} });
   } catch (error) {
+    if (isForeignKeyViolation(error)) {
+      return res.status(409).json({
+        success: false,
+        error:
+          "This payment cannot be deleted because it is linked to other records.",
+      });
+    }
+
     return res.status(500).json({
       success: false,
       error: "Failed to delete payment",
