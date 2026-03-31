@@ -92,6 +92,7 @@ export const classes = pgTable("classes", {
   level: varchar("level", { length: 50 }).notNull(), // e.g., "Primary 1", "Primary 2"
   capacity: integer("capacity").notNull().default(0),
   supervisorId: integer("supervisor_id").notNull().references(() => staff.id),
+  classTeacherSignatureUrl: text("class_teacher_signature_url"),
   subjectIds: integer("subject_ids").array().notNull().default([]),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -297,7 +298,6 @@ export const studentClassEnrollments = pgTable(
     classPosition: varchar("class_position", { length: 10 }), // Position in the class for the term
     remarks: text("remarks"),
     aggregate: numeric("aggregate", { precision: 8, scale: 2 }), // Aggregate of best 6 subjects
-    classTeacherSignatureUrl: text("class_teacher_signature_url"),
     generalComments: text("general_comments"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

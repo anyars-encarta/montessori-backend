@@ -8,6 +8,13 @@
       "when": 1774542603630,
       "tag": "0000_chubby_thanos",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774964438641,
+      "tag": "0001_next_cammi",
+      "breakpoints": true
     }
   ]
 }
