@@ -18,6 +18,10 @@ const isValidRole = (
   return value === "staff" || value === "teacher" || value === "admin";
 };
 
+const isValidStatus = (value: unknown): value is "active" | "inactive" => {
+  return value === "active" || value === "inactive";
+};
+
 // GET /api/users - list users with pagination, search, role filter
 router.get("/", async (req, res) => {
   try {
@@ -33,6 +37,9 @@ router.get("/", async (req, res) => {
 
     const roleRaw = req.query.role;
     const role = isValidRole(roleRaw) ? roleRaw : null;
+
+    const statusRaw = req.query.status;
+    const status = isValidStatus(statusRaw) ? statusRaw : null;
 
     const conditions = [];
     const escapeIlike = (str: string) =>
@@ -51,6 +58,10 @@ router.get("/", async (req, res) => {
       conditions.push(eq(user.role, role));
     }
 
+    if (status) {
+      conditions.push(eq(user.status, status));
+    }
+
     const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const [rows, totalRows] = await Promise.all([
@@ -63,6 +74,7 @@ router.get("/", async (req, res) => {
           image: user.image,
           imageCldPubId: user.imageCldPubId,
           role: user.role,
+          status: user.status,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
         })
@@ -108,6 +120,7 @@ router.get("/:id", async (req, res) => {
         image: user.image,
         imageCldPubId: user.imageCldPubId,
         role: user.role,
+        status: user.status,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       })
@@ -144,7 +157,7 @@ router.put("/:id", async (req, res) => {
     }
 
     const [found] = await db
-      .select({ id: user.id, email: user.email })
+      .select({ id: user.id, email: user.email, status: user.status })
       .from(user)
       .where(eq(user.id, id))
       .limit(1);
@@ -199,6 +212,22 @@ router.put("/:id", async (req, res) => {
       });
     }
 
+    // --- status (admin can set status for other users) ---
+    const statusRaw = req.body?.status;
+    const status = isValidStatus(statusRaw) ? statusRaw : null;
+    if (!isSelf && !status) {
+      return res.status(400).json({
+        success: false,
+        error: "status must be one of: active, inactive.",
+      });
+    }
+    if (isSelf && status && status !== found.status) {
+      return res.status(403).json({
+        success: false,
+        error: "You cannot change your own account status.",
+      });
+    }
+
     // --- image ---
     const image =
       typeof req.body?.image === "string" && req.body.image.trim()
@@ -224,6 +253,7 @@ router.put("/:id", async (req, res) => {
         name,
         ...(emailChanged ? { email: newEmail, emailVerified: false } : {}),
         ...(!isSelf && role ? { role } : {}),
+        ...(!isSelf && status ? { status } : {}),
         image,
         imageCldPubId,
         updatedAt: new Date(),
@@ -237,6 +267,7 @@ router.put("/:id", async (req, res) => {
         image: user.image,
         imageCldPubId: user.imageCldPubId,
         role: user.role,
+        status: user.status,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       });

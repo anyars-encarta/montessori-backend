@@ -28,6 +28,9 @@ import { toNodeHandler } from "better-auth/node";
 import securityMiddleware from "./middleware/security.js";
 import requireAuth from "./middleware/requireAuth.js";
 import { auth } from "./lib/auth.js";
+import { db } from "./db/index.js";
+import { user } from "./db/schema/index.js";
+import { eq } from "drizzle-orm";
 
 const app = express();
 
@@ -71,11 +74,42 @@ app.use(
   }),
 );
 
-app.all("/api/auth/*splat", toNodeHandler(auth));
-
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.post("/api/auth/sign-in/email", async (req, res, next) => {
+  try {
+    const emailRaw = req.body?.email;
+    const email =
+      typeof emailRaw === "string" && emailRaw.trim()
+        ? emailRaw.trim().toLowerCase()
+        : null;
+
+    if (!email) {
+      return next();
+    }
+
+    const [existingUser] = await db
+      .select({ status: user.status })
+      .from(user)
+      .where(eq(user.email, email))
+      .limit(1);
+
+    if (existingUser?.status === "inactive") {
+      return res.status(403).json({
+        error: "Account is inactive.",
+        message: "This account has been blocked. Contact an administrator.",
+      });
+    }
+
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+});
+
+app.all("/api/auth/*splat", toNodeHandler(auth));
 
 app.use("/api", requireAuth);
 app.use("/api", securityMiddleware);

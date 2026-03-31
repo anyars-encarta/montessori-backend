@@ -1,7 +1,10 @@
 import type { NextFunction, Request, Response } from "express";
 import { fromNodeHeaders } from "better-auth/node";
+import { eq } from "drizzle-orm";
 
 import { auth } from "../lib/auth.js";
+import { db } from "../db/index.js";
+import { user } from "../db/schema/index.js";
 
 const requireAuth = async (
   req: Request,
@@ -17,6 +20,19 @@ const requireAuth = async (
       return res.status(401).json({
         error: "Unauthorized",
         message: "You must be logged in to access this resource.",
+      });
+    }
+
+    const [currentUser] = await db
+      .select({ status: user.status })
+      .from(user)
+      .where(eq(user.id, session.user.id))
+      .limit(1);
+
+    if (!currentUser || currentUser.status === "inactive") {
+      return res.status(403).json({
+        error: "Forbidden",
+        message: "Your account is inactive. Contact an administrator.",
       });
     }
 

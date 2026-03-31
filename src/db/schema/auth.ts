@@ -11,6 +11,7 @@ import {
 
 // Enum for user role
 export const roleEnum = pgEnum("role", ["staff", "teacher", "admin"]);
+export const userStatusEnum = pgEnum("status", ["active", "inactive"]);
 
 const timestamps = {
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -31,6 +32,7 @@ export const user = pgTable(
     image: text("image"),
     // Custom fields
     role: roleEnum("role").notNull().default("staff"),
+    status: userStatusEnum("status").notNull().default("active"),
     imageCldPubId: text("image_cld_pub_id"),
     ...timestamps,
   },

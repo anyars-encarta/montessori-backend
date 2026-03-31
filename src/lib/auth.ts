@@ -27,6 +27,7 @@ const authBaseUrl =
     .replace(/^['"]|['"]$/g, "")
     .replace(/\/+$/, "") || "http://localhost:8000/api/auth";
 const RoleEnum = z.enum(["staff", "teacher", "admin"]);
+const UserStatusEnum = z.enum(["active", "inactive"]);
 
 if (!secret) throw new Error("BETTER_AUTH_SECRET is not set in the .env file");
 if (!trustedOrigins.length) throw new Error("FRONTEND_URL is not set in the .env file");
@@ -122,6 +123,12 @@ export const auth = betterAuth({
         required: true,
         defaultValue: "staff",
         validator: { input: RoleEnum },
+      },
+      status: {
+        type: "string",
+        required: true,
+        defaultValue: "active",
+        validator: { input: UserStatusEnum },
       },
       imageCldPubId: {
         type: "string",
