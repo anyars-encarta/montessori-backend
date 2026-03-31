@@ -623,6 +623,7 @@ router.get("/overview", async (req, res) => {
         className: classes.name,
         classLevel: classes.level,
         classCapacity: classes.capacity,
+        classTeacherSignatureUrl: classes.classTeacherSignatureUrl,
         academicYearId: academicYears.id,
         academicYear: academicYears.year,
         termId: terms.id,
@@ -803,6 +804,7 @@ router.get("/overview", async (req, res) => {
             name: row.className,
             level: row.classLevel,
             capacity: row.classCapacity,
+            classTeacherSignatureUrl: row.classTeacherSignatureUrl,
           },
           academicYear: {
             id: row.academicYearId,
