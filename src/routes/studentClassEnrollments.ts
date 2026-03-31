@@ -635,6 +635,7 @@ router.get("/overview", async (req, res) => {
         classPosition: studentClassEnrollments.classPosition,
         aggregate: studentClassEnrollments.aggregate,
         remarks: studentClassEnrollments.remarks,
+        generalComments: studentClassEnrollments.generalComments,
       })
       .from(studentClassEnrollments)
       .innerJoin(students, eq(studentClassEnrollments.studentId, students.id))
@@ -820,6 +821,7 @@ router.get("/overview", async (req, res) => {
           classPosition: row.classPosition,
           aggregate: row.aggregate,
           remarks: row.remarks,
+          generalComments: row.generalComments,
           assessments: assessmentRows,
         };
       }),
@@ -1343,6 +1345,58 @@ router.post("/bulk-transition", async (req, res) => {
     });
   } catch (error) {
     console.error("POST /student-class-enrollments/bulk-transition error:", error);
+    return res.status(500).json({ success: false, error: "Internal Server Error" });
+  }
+});
+
+router.put("/:id", async (req, res) => {
+  try {
+    const enrollmentId = parsePositiveInt(req.params.id);
+    
+    if (!enrollmentId) {
+      return res.status(400).json({
+        success: false,
+        error: "Valid enrollment ID is required",
+      });
+    }
+
+    const { generalComments } = req.body;
+
+    const [existingEnrollment] = await db
+      .select()
+      .from(studentClassEnrollments)
+      .where(eq(studentClassEnrollments.id, enrollmentId));
+
+    if (!existingEnrollment) {
+      return res.status(404).json({
+        success: false,
+        error: "Student class enrollment not found",
+      });
+    }
+
+    const normalizedGeneralComments =
+      typeof generalComments === "string" && generalComments.trim()
+        ? generalComments.trim()
+        : null;
+
+    await db
+      .update(studentClassEnrollments)
+      .set({
+        generalComments: normalizedGeneralComments,
+      })
+      .where(eq(studentClassEnrollments.id, enrollmentId));
+
+    const [updatedEnrollment] = await db
+      .select()
+      .from(studentClassEnrollments)
+      .where(eq(studentClassEnrollments.id, enrollmentId));
+
+    return res.status(200).json({
+      success: true,
+      data: updatedEnrollment,
+    });
+  } catch (error) {
+    console.error("PUT /student-class-enrollments/:id error:", error);
     return res.status(500).json({ success: false, error: "Internal Server Error" });
   }
 });
