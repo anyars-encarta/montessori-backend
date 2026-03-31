@@ -25,12 +25,16 @@ const parsePositiveInt = (value: unknown) => {
 
 router.post("/", async (req, res) => {
   try {
-    const { name, level, capacity, supervisorId, subjectIds } = req.body;
+    const { name, level, capacity, supervisorId, subjectIds, classTeacherSignatureUrl } = req.body;
 
     const trimmedName = typeof name === "string" ? name.trim() : "";
     const trimmedLevel = typeof level === "string" ? level.trim() : "";
     const parsedCapacity = Number.parseInt(String(capacity), 10);
     const parsedSupervisorId = parsePositiveInt(supervisorId);
+    const normalizedClassTeacherSignatureUrl =
+      typeof classTeacherSignatureUrl === "string" && classTeacherSignatureUrl.trim()
+        ? classTeacherSignatureUrl.trim()
+        : null;
 
     if (!trimmedName) {
       return res.status(400).json({ success: false, error: "name is required" });
@@ -93,6 +97,7 @@ router.post("/", async (req, res) => {
         level: trimmedLevel,
         capacity: parsedCapacity,
         supervisorId: parsedSupervisorId,
+        classTeacherSignatureUrl: normalizedClassTeacherSignatureUrl,
       })
       .returning();
 
@@ -515,12 +520,16 @@ router.put("/:id", async (req, res) => {
       return res.status(400).json({ success: false, error: "Invalid class id" });
     }
 
-    const { name, level, capacity, supervisorId, subjectIds } = req.body;
+    const { name, level, capacity, supervisorId, subjectIds, classTeacherSignatureUrl } = req.body;
 
     const trimmedName = typeof name === "string" ? name.trim() : "";
     const trimmedLevel = typeof level === "string" ? level.trim() : "";
     const parsedCapacity = Number.parseInt(String(capacity), 10);
     const parsedSupervisorId = parsePositiveInt(supervisorId);
+    const normalizedClassTeacherSignatureUrl =
+      typeof classTeacherSignatureUrl === "string" && classTeacherSignatureUrl.trim()
+        ? classTeacherSignatureUrl.trim()
+        : null;
 
     if (!trimmedName) {
       return res.status(400).json({ success: false, error: "name is required" });
@@ -592,6 +601,7 @@ router.put("/:id", async (req, res) => {
         level: trimmedLevel,
         capacity: parsedCapacity,
         supervisorId: parsedSupervisorId,
+        classTeacherSignatureUrl: normalizedClassTeacherSignatureUrl,
         updatedAt: new Date(),
       })
       .where(eq(classes.id, classId))
