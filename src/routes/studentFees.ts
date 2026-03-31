@@ -94,4 +94,43 @@ router.get("/:id", async (req, res) => {
   }
 });
 
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const parsedId = Number.parseInt(id, 10);
+
+    if (Number.isNaN(parsedId)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid student fee id",
+      });
+    }
+
+    const existing = await db
+      .select({ id: studentFees.id })
+      .from(studentFees)
+      .where(eq(studentFees.id, parsedId));
+
+    if (!existing.length) {
+      return res.status(404).json({
+        success: false,
+        error: "Student fee not found",
+      });
+    }
+
+    await db.delete(studentFees).where(eq(studentFees.id, parsedId));
+
+    return res.status(200).json({
+      success: true,
+      data: {},
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      error:
+        "Failed to delete student fee. It may be referenced by payment records.",
+    });
+  }
+});
+
 export default router;
