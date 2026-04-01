@@ -1,5 +1,7 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { APIError, createAuthMiddleware } from "better-auth/api";
+import { eq } from "drizzle-orm";
 import nodemailer from "nodemailer";
 import { db } from "../db/index.js";
 import * as schema from "../db/schema/auth.js";
@@ -119,6 +121,34 @@ export const auth = betterAuth({
   secret,
   baseURL: authBaseUrl,
   trustedOrigins,
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (ctx.path !== "/sign-in/email") {
+        return;
+      }
+
+      const email =
+        typeof ctx.body?.email === "string" && ctx.body.email.trim()
+          ? ctx.body.email.trim().toLowerCase()
+          : null;
+
+      if (!email) {
+        return;
+      }
+
+      const [existingUser] = await db
+        .select({ status: schema.user.status })
+        .from(schema.user)
+        .where(eq(schema.user.email, email))
+        .limit(1);
+
+      if (existingUser?.status === "inactive") {
+        throw new APIError("FORBIDDEN", {
+          message: "This account has been blocked. Contact an administrator.",
+        });
+      }
+    }),
+  },
   database: drizzleAdapter(db, {
     provider: "pg",
     schema,
