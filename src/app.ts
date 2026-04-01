@@ -34,9 +34,20 @@ import { eq } from "drizzle-orm";
 
 const app = express();
 
+const normalizeOrigin = (value: string) => {
+  const trimmed = value.trim().replace(/^['"]|['"]$/g, "").replace(/\/+$/, "");
+  if (!trimmed) return "";
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
+};
+
 const configuredFrontendUrls = (process.env.FRONTEND_URL ?? "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter((origin) => Boolean(origin));
 
 const allowedOrigins = new Set<string>([
@@ -50,6 +61,14 @@ const allowedOrigins = new Set<string>([
   "http://127.0.0.1:4174",
 ]);
 
+allowedOrigins.forEach((origin) => {
+  const normalized = normalizeOrigin(origin);
+  if (normalized !== origin) {
+    allowedOrigins.delete(origin);
+    allowedOrigins.add(normalized);
+  }
+});
+
 configuredFrontendUrls.forEach((origin) => {
   allowedOrigins.add(origin);
 });
@@ -62,12 +81,14 @@ app.use(
         return;
       }
 
-      if (allowedOrigins.has(origin)) {
+      const normalizedRequestOrigin = normalizeOrigin(origin);
+
+      if (allowedOrigins.has(normalizedRequestOrigin)) {
         callback(null, true);
         return;
       }
 
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      callback(new Error(`CORS blocked for origin: ${normalizedRequestOrigin}`));
     },
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     credentials: true, // allow cookies

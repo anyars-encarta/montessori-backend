@@ -5,10 +5,21 @@ import { db } from "../db/index.js";
 import * as schema from "../db/schema/auth.js";
 import { z } from "zod";
 
+const normalizeOrigin = (value: string) => {
+  const trimmed = value.trim().replace(/^['"]|['"]$/g, "").replace(/\/+$/, "");
+  if (!trimmed) return "";
+
+  try {
+    return new URL(trimmed).origin;
+  } catch {
+    return trimmed;
+  }
+};
+
 const secret = process.env.BETTER_AUTH_SECRET!;
 const frontendUrls = (process.env.FRONTEND_URL ?? "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin))
   .filter((origin) => Boolean(origin));
 const defaultTrustedOrigins = [
   "http://localhost:5173",
@@ -20,7 +31,9 @@ const defaultTrustedOrigins = [
   "http://127.0.0.1:4173",
   "http://127.0.0.1:4174",
 ];
-const trustedOrigins = [...new Set([...defaultTrustedOrigins, ...frontendUrls])];
+const trustedOrigins = [
+  ...new Set([...defaultTrustedOrigins.map((origin) => normalizeOrigin(origin)), ...frontendUrls]),
+];
 const authBaseUrl =
   process.env.BETTER_AUTH_URL
     ?.trim()
